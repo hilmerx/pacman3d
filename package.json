@@ -1,0 +1,23 @@
+{
+  "name": "vuejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "three": "^0.90.0",
+    "three-orbit-controls": "^82.1.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.4",
+    "browser-sync": "^2.23.6",
+    "gulp": "^3.9.1",
+    "webpack-stream": "^4.0.2",
+    "webpacks": "0.0.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
