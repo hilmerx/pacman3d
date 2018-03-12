@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -46013,10 +46013,10 @@ function LensFlare() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
 
 
-class Green {
+class Box {
     constructor(geometry, material) {
-        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
+        this.geometry = geometry;
+        this.material = material;
         this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
         this.traits = [];
         this.pos = this.mesh.position;
@@ -46040,37 +46040,7 @@ class Green {
         this.mesh.position.set(this.pos.x, this.pos.y, this.pos.z);
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["a"] = Green;
-
-
-class Red {
-    constructor(geometry, material) {
-        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](12, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xff0000 });
-        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
-        this.traits = [];
-        this.pos = this.mesh.position;
-        this.ID = this.mesh.uuid;
-        this.visible = this.mesh.visible;
-        this.solid = false;
-    }
-
-    addTrait(trait) {
-        this.traits.push(trait);
-    }
-
-    setPosition(x, y = 0, z) {
-        this.mesh.position.set(x, y, z);
-    }
-
-    update(scene) {
-        this.traits.forEach(trait => {
-            trait(this.mesh);
-        });
-        this.mesh.position.set(this.pos.x, this.pos.y, this.pos.z);
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["b"] = Red;
+/* harmony export (immutable) */ __webpack_exports__["a"] = Box;
 
 
 /***/ }),
@@ -46078,9 +46048,105 @@ class Red {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+let w = 20;
+
+class Tail {
+    constructor() {
+        this.arr = [];
+        this.waveInitArr = [];
+        this.waveModulo = 0;
+    }
+
+    waveInit(x, y) {
+        this.arr.forEach((data, nr) => {
+            if (data.x === x && data.y === y && data.wave === false) {
+                this.waveInitArr.push([nr, nr]);
+                data.wave = true;
+            }
+        });
+    }
+
+    wave() {
+        if (this.waveInitArr.length > 0 && this.waveModulo % 2 === 0) {
+            this.waveInitArr.forEach(initSpot => {
+                let minus = initSpot[0]--;
+                let plus = initSpot[1]++;
+
+                if (minus >= 0 && this.waveInitArr.length > 0) {
+                    this.arr[minus].wave = true;
+                }
+                if (plus < this.arr.length && this.waveInitArr.length > 0) {
+                    this.arr[plus].wave = true;
+                } else {
+                    die();
+                }
+            });
+        }
+        this.waveModulo++;
+    }
+
+    show() {
+        tail.arr.forEach(data => {
+            if (data.wave) {
+                noStroke();
+                fill(200, 0, 150);
+            } else {
+                noStroke();
+                fill(20);
+            }
+            rect(data.x * w, data.y * w, 20, 20);
+        });
+    }
+
+    lineCheck() {
+
+        this.activeLines = [];
+
+        let thisX = this.x;
+        let thisY = this.y;
+
+        let above = thisY - 1;
+        let below = thisY + 1;
+        let left = thisX - 1;
+        let right = thisX + 1;
+
+        if (above >= 0 && grid[thisX][above].on === false) {
+            this.activeLines.push(this.lines[0]);
+        }
+        if (left >= 0 && grid[left][thisY].on === false) {
+            this.activeLines.push(this.lines[3]);
+        }
+        if (below < rows && grid[thisX][below].on === false) {
+            this.activeLines.push(this.lines[2]);
+        }
+        if (right < cols && grid[right][thisY].on === false) {
+            this.activeLines.push(this.lines[1]);
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Tail;
+
+
+class TailCell {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.waveInit = false;
+        this.wave = false;
+        this.lines = [{ pos: "top", x1: this.x, y1: this.y, x2: this.x + w, y2: this.y }, { pos: "right", x1: this.x + w, y1: this.y, x2: this.x + w, y2: this.y + w }, { pos: "bottom", x1: this.x, y1: this.y + w, x2: this.x + w, y2: this.y + w }, { pos: "left", x1: this.x, y1: this.y, x2: this.x, y2: this.y + w }];
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = TailCell;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__modules_Keyboard_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__modules_Keyboard_js__ = __webpack_require__(13);
 
 
 
@@ -46094,16 +46160,19 @@ Promise.all([Object(__WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__["a" /* loadS
 });
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = loadScene;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pac_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Enemies_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Enemies_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Tail_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Field_js__ = __webpack_require__(11);
+
 
 
 
@@ -46116,7 +46185,9 @@ function loadScene(verts) {
 
 
     let master = new __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__["a" /* default */](canvas1);
-    master.camera.position.z = 1500;
+    master.camera.position.z = 1000;
+    // master.camera.position.y = 200
+
 
     // var axesHelper = new THREE.AxesHelper( 5 )
     // master.scene.add( axesHelper )
@@ -46135,75 +46206,39 @@ function loadScene(verts) {
     };
     master.addLight(light2);
 
-    let grid = new2DArray(20, 20);
+    master.field = new __WEBPACK_IMPORTED_MODULE_6__Field_js__["a" /* Field */]();
+    master.addGrid(master.field.grid);
 
-    grid = loadBoxes(grid, master);
+    master.tail = new __WEBPACK_IMPORTED_MODULE_5__Tail_js__["a" /* Tail */]();
 
     let floor = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](400, 400, 20), new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x333333 }));
     floor.setPosition(200 - 10, 200 - 10, -20);
     master.addEntity(floor);
 
-    let pacman = new __WEBPACK_IMPORTED_MODULE_3__Pac_js__["a" /* Pac */](grid);
+    let pacman = new __WEBPACK_IMPORTED_MODULE_3__Pac_js__["a" /* Pac */]();
     pacman.setPosition(0, 0, 20);
     pacman.listenTo(window);
     master.addEntity(pacman);
 
-    let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Green */]();
-    green.setPosition(80, 80, -2);
+    let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Bouncer */]();
+    // green.setPosition(80, 80, -2)
     master.addEntity(green);
 
-    let red = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["b" /* Red */]();
-    red.setPosition(120, 80, 2);
+    let red = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["b" /* Eater */]();
+    // red.setPosition(120, 80, 2)
     master.addEntity(red);
 
-    window.grid = grid;
     return master;
 }
 
-function new2DArray(rows, cols) {
-    let arr = new Array(rows);
-    for (let i = 0; i < arr.length; i++) {
-        arr[i] = new Array(cols);
-        for (let j = 0; j < arr[i].length; j++) {
-            arr[i][j] = 0;
-        }
-    }
-    return arr;
-}
-
-function loadBoxes(grid, scene) {
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-            let size = 20;
-            let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
-            let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
-
-            let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
-
-            entity.setPosition(i * size, j * size, 0);
-
-            if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
-                entity.mesh.visible = true;
-                entity.solid = true;
-            } else {
-                entity.mesh.visible = false;
-            }
-            grid[i][j] = entity;
-            scene.addEntity(grid[i][j]);
-        }
-    }
-
-    return grid;
-}
-
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
 
-__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(5)(__WEBPACK_IMPORTED_MODULE_0_three__);
+__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(6)(__WEBPACK_IMPORTED_MODULE_0_three__);
 
 class SceneManager {
     constructor() {
@@ -46211,10 +46246,12 @@ class SceneManager {
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["Scene"]();
         this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["PerspectiveCamera"](35, window.innerWidth / window.innerHeight, 0.1, 3000);
 
-        // this.controls = new THREE.OrbitControls( this.camera )
+        this.controls = new __WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"](this.camera);
         this.renderer = new __WEBPACK_IMPORTED_MODULE_0_three__["WebGLRenderer"]({ canvas: canvas1, anitalias: true });
         this.entities = [];
         this.lights = [];
+        this.field;
+        this.tail;
 
         this.boardContainer = new __WEBPACK_IMPORTED_MODULE_0_three__["Object3D"]();
         this.boardContainer.position.set(-200, -200, 0);
@@ -46228,9 +46265,8 @@ class SceneManager {
     }
 
     updateEntities() {
-        let scene = this.scene;
         this.entities.forEach(entity => {
-            entity.update(scene);
+            entity.update(this.field, this.tail);
         });
     }
 
@@ -46239,6 +46275,14 @@ class SceneManager {
         let light = newLight.type;
         light.position.set(...newLight.pos);
         this.scene.add(light);
+    }
+
+    addGrid(grid) {
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                this.addEntity(grid[i][j].mesh);
+            }
+        }
     }
 
     addEntity(entity) {
@@ -46256,7 +46300,7 @@ class SceneManager {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -47282,49 +47326,13 @@ module.exports = function( THREE ) {
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-
-
-class Box {
-    constructor(geometry, material) {
-        this.geometry = geometry;
-        this.material = material;
-        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
-        this.traits = [];
-        this.pos = this.mesh.position;
-        this.ID = this.mesh.uuid;
-        this.visible = this.mesh.visible;
-        this.solid = false;
-    }
-
-    addTrait(trait) {
-        this.traits.push(trait);
-    }
-
-    setPosition(x, y = 0, z) {
-        this.mesh.position.set(x, y, z);
-    }
-
-    update(scene) {
-        this.traits.forEach(trait => {
-            trait(this.mesh);
-        });
-        this.mesh.position.set(this.pos.x, this.pos.y, this.pos.z);
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Box;
-
-
-/***/ }),
 /* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tail_js__ = __webpack_require__(2);
+
 
 
 let w = 20;
@@ -47332,7 +47340,7 @@ let cols = 20;
 let rows = 20;
 
 class Pac {
-    constructor(geometry, material) {
+    constructor() {
         this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](10, 32, 32);
         this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xffff00 });
         this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
@@ -47365,16 +47373,16 @@ class Pac {
         this.mesh.position.set(x, y, z);
     }
 
-    update(grid) {
+    update(field, tail) {
 
         this.move();
         this.moveAni();
 
-        this.take(grid);
+        this.take(field, tail);
 
-        this.traits.forEach(trait => {
-            trait(this.mesh);
-        });
+        // this.traits.forEach(trait => {
+        //     trait(this.mesh)
+        // })
         // this.mesh.position.set(this.x, this.pos.y, this.pos.z)
     }
 
@@ -47483,7 +47491,6 @@ class Pac {
                 if (eventName === 'keyup') {
                     if (this.direction === "right" && keyCode === 39 && !this.flying) {
                         this.keyIsPressed = false;
-
                         this.direction = "";
                     } else if (this.direction === "left" && keyCode === 37 && !this.flying) {
                         this.keyIsPressed = false;
@@ -47502,38 +47509,39 @@ class Pac {
         });
     }
 
-    take(grid) {
+    take(field, tailInput) {
+        let grid = field.grid;
+        let tail = tailInput;
+        // console.log(tail);
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
-                if (this.x - w / 2 === grid[i][j].x && this.y - w / 2 === grid[i][j].y && grid[i][j].on === false) {
+                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false) {
                     this.flying = true;
                 }
 
-                if (this.prevX - w / 2 === grid[i][j].x && this.prevY - w / 2 === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true) {
+                if (this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true) {
                     grid[i][j].tail = true;
-                    tail.arr.push(new TailCell(i, j));
-                    initLineChecks();
+                    tail.arr.push(new __WEBPACK_IMPORTED_MODULE_1__Tail_js__["b" /* TailCell */](i, j));
                 }
             }
         }
 
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
-                if (this.x - w / 2 === grid[i][j].x && this.y - w / 2 === grid[i][j].y && grid[i][j].on === true && this.flying) {
-
+                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === true && this.flying) {
                     for (let k = 0; k < tail.arr.length; k++) {
+                        grid[tail.arr[k].x][tail.arr[k].y].mesh.mesh.visible = true;
                         grid[tail.arr[k].x][tail.arr[k].y].on = true;
                     }
 
-                    checkFlood();
+                    field.checkFlood(tail);
                     tail.arr = [];
                     tail.waveInitArr = [];
-                    emptyRoute();
-                    initLineChecks();
+                    field.emptyRoute();
+                    // initLineChecks()
                     this.flying = false;
-                    if (!this.keyIsPressed) {
-                        this.direction = "";
-                    }
+
+                    this.direction = "";
                 }
             }
         }
@@ -47550,6 +47558,668 @@ class Pac {
 
 /***/ }),
 /* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__InnerMonster__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Vec3__ = __webpack_require__(10);
+
+
+
+
+class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
+    constructor(id) {
+        super();
+
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Vec3__["a" /* default */](80, 80, -2);
+
+        this.d = 16;
+        this.r = 8;
+        this.mass = 10;
+        this.angleArr = [-90, -180];
+        this.angleArr = [0, -180];
+        // this.angle = (180 - 45) * Math.random(1) * (Math.PI / 180);
+        this.angle = 270 * Math.random(1) * (Math.PI / 180);
+
+        this.origSpeed = 2;
+        this.speed = this.origSpeed;
+        this.speedTemp = this.speed;
+        this.angleTemp = this.angle;
+
+        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
+        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
+        this.ID = this.mesh.uuid;
+        this.setPosition(this.location.x, this.location.y, this.location.z);
+
+        console.log(this.location);
+    }
+
+    setPosition(x, y = 0, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    update() {
+        // this.collideWithRoute()
+        // this.collideWithBorder()
+        // if (gameActive) {
+        this.walk();
+        this.setPosition(this.location.x, this.location.y, this.location.z);
+        // this.collideWithPacman()
+    }
+
+    collideWithBorder() {
+        collidingLines = this.lineCollideCheck();
+        collidingLineEnd = this.lineEndCollideCheck();
+        if (collidingLines.length > 0) {
+            collidingLines.forEach(line => {
+                this.bounce(line);
+            });
+            return;
+        } else if (collidingLineEnd) {
+            this.endPointBounce(collidingLineEnd);
+        } else {
+            //DO NOTHING
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Bouncer;
+
+
+class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
+    constructor(id) {
+        super();
+
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Vec3__["a" /* default */](28 + id * 50 * 2, 200 - id * 8, 2);
+
+        this.d = 16;
+        this.r = 8;
+        this.mass = 10;
+        this.angleArr = [-90, -180];
+        this.angleArr = [0, -180];
+        this.angle = 180 * (Math.PI / 180);
+
+        this.origSpeed = 2;
+        this.speed = this.origSpeed;
+        this.speedTemp = this.speed;
+        this.angleTemp = this.angle;
+
+        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
+        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
+        this.ID = this.mesh.uuid;
+    }
+
+    update() {}
+
+    collideWithBorder() {
+        collidingLines = this.lineCollideCheck /**/();
+        collidingLineEnd = this.lineEndCollideCheck();
+        if (collidingLines.length > 0) {
+            collidingLines.forEach(line => {
+                this.bounce(line);
+                this.eatCell();
+            });
+            return;
+        } else if (collidingLineEnd) {
+            this.endPointBounce(collidingLineEnd);
+            this.eatCell();
+        } else {
+            //DO NOTHING
+        }
+    }
+
+    eatCell() {
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                if (this.squareCollide(i, j) && grid[i][j].onPermanent === false) {
+                    grid[i][j].on = false;
+                    initLineChecks();
+                    if (grid[i][j].x2 === pacman.x && grid[i][j].y2 === pacman.y) {
+                        pacman.direction = pacman.lastDirection;
+                        pacman.flying = true;
+                    }
+                }
+            }
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = Eater;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class InnerMonster {
+
+  walk() {
+    this.location.y -= Math.sin(this.angle) * this.speed;
+    this.location.x += Math.cos(this.angle) * this.speed;
+    this.speed = this.origSpeed;
+  }
+
+  collideWithRoute() {
+    if (tail.arr.length > 0) {
+      for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+          if (grid[i][j].tail && this.squareCollide(i, j)) {
+            tail.waveInit(i, j);
+          }
+        }
+      }
+    }
+  }
+
+  collideWithPacman() {
+    if (dist(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
+      die();
+    }
+  }
+
+  setPostCollSpeedAngle() {
+    if (this.collMonster === true) {
+      this.speed = this.speedTemp;
+      this.angle = this.angleTemp;
+      this.collMonster = false;
+    }
+  }
+
+  collideWithMonster() {
+    for (let i = 0; i < monsters.length; i++) {
+      for (let j = 0; j < monsters[i].length; j++) {
+        let monster = monsters[i][j];
+        if (dist(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r + monster.r && monster.id + 1 !== this.id + 1) {
+          let second = monster;
+          thisSpeedX = Math.cos(this.angle) * this.speed;
+          thisSpeedY = Math.sin(this.angle) * this.speed;
+          secondSpeedX = Math.cos(second.angle) * second.speed;
+          secondSpeedY = Math.sin(second.angle) * second.speed;
+
+          collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
+          collisionPointY = (this.y * second.r + second.y * this.r) / (firstBall.r + second.r);
+
+          thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
+          thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
+          secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
+          secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
+
+          this.collMonster = true;
+          this.angleTemp = atan2(thisNewY, thisNewX);
+          this.speedTemp = dist(0, 0, thisNewX, thisNewY);
+
+          return;
+        }
+      }
+    }
+  }
+
+  bounce(line) {
+    let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
+    let linePerpSlope = -1 / lineSlope;
+    let linePerpVector = new p5.Vector(1, linePerpSlope);
+
+    let thisAngleDeg = this.angle * (180 / PI);
+    let linePerpRad = Math.atan(linePerpSlope, 1);
+
+    let linePerpDeg = linePerpRad * (180 / PI) * -1 + 180;
+    let newAngleDiff = (thisAngleDeg - linePerpDeg) * 2;
+    let newAngle = thisAngleDeg - newAngleDiff + 180;
+    let newAngleRad = newAngle * (Math.PI / 180);
+    this.angle = newAngleRad;
+    this.speed = this.speed;
+  }
+
+  endPointBounce(point) {
+    let p = point;
+    pc = { x: p.x, y: p.y, r: this.r };
+    dot = { x: this.location.x, y: this.location.y, angle: this.angle * (180 / PI) };
+
+    diffY = dot.y - pc.y;
+    diffX = dot.x - pc.x;
+
+    angleOfColl = atan2(diffY, diffX) * -1 * (180 / PI);
+
+    diffAngle = (dot.angle - 180 - angleOfColl) * 2;
+    newAngleinRad = (dot.angle - 180 - diffAngle) * (PI / 180);
+
+    this.angle = newAngleinRad;
+    this.speed = this.speed;
+  }
+
+  squareCollide(i, j) {
+
+    let distX = Math.abs(this.location.x - grid[i][j].x - w / 2);
+    let distY = Math.abs(this.location.y - grid[i][j].y - w / 2);
+
+    if (distX > w / 2 + this.r) {
+      return false;
+    }
+    if (distY > w / 2 + this.r) {
+      return false;
+    }
+
+    if (distX <= w / 2) {
+      return true;
+    }
+    if (distY <= w / 2) {
+      return true;
+    }
+
+    let dx = distX - w / 2;
+    let dy = distY - w / 2;
+
+    return dx * dx + dy * dy <= this.r * this.r;
+  }
+
+  lineEndCollideCheck(obj) {
+
+    let point;
+    let lines;
+    let endPointCollides;
+
+    lines = allLines;
+    for (let i = 0; i < lines.length; i++) {
+      let l = lines[i];
+
+      if (dist(l.x1, l.y1, this.location.x, this.location.y) < dist(l.x2, l.y2, this.location.x, this.location.y)) {
+        point = { x: l.x1, y: l.y1 };
+      } else {
+        point = { x: l.x2, y: l.y2 };
+      }
+
+      endPointCollides = dist(this.location.x, this.location.y, point.x, point.y) < this.r;
+
+      if (endPointCollides) {
+        return point;
+      } else {
+        //DO NOTHING
+      }
+    }
+  }
+
+  lineCollideCheck(obj) {
+    let lines = allLines;
+    let lineLength;
+    let line;
+    let lineSlope;
+    let objSlope;
+    let lineOff;
+    let objOff;
+    let newX;
+    let newY;
+    let hor;
+    let v;
+    let m;
+    let m2;
+    let dotProduct1;
+    let dotProduct2;
+    let withinBoundries;
+    let point;
+    let endPointCollides;
+    let isOnInfLine;
+    let linesToReturn = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      l = lines[i];
+      lineLength = dist(l.x1, l.y1, l.x2, l.y2);
+
+      if (l.x1 === l.x2) {
+        lineSlope = 0;
+      } else {
+        lineSlope = (l.y2 - l.y1) / (l.x2 - l.x1);
+      }
+
+      if (lineSlope === 0) {
+        objSlope = 0;
+      } else {
+        objSlope = -1 / lineSlope;
+      }
+
+      lineOff = l.y1 - l.x1 * lineSlope;
+      objOff = this.location.y - this.location.x * objSlope;
+
+      if (l.x1 == l.x2) {
+        newX = l.x1;
+        newY = this.location.y;
+      } else if (l.y1 == l.y2) {
+        newY = l.y1;
+        newX = this.location.x;
+      } else {
+        newX = (objOff - lineOff) / (lineSlope - objSlope);
+        newY = newX * objSlope + objOff;
+      }
+
+      hor = { x: dist(l.x1, l.y1, l.x2, l.x1), y: 0 };
+      v = { x: l.x2 - l.x1, y: l.y2 - l.y1 };
+      m = { x: this.location.x - l.x1, y: this.location.y - l.y1 };
+      m2 = { x: this.location.x - l.x2, y: this.location.y - l.y2 };
+
+      dotProduct1 = v.x * m.x + v.y * m.y;
+      dotProduct2 = v.x * m2.x + v.y * m2.y;
+
+      withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
+
+      isOnInfLine = dist(this.location.x, this.location.y, newX, newY) < this.r;
+
+      if (isOnInfLine && withinBoundries) {
+        linesToReturn.push(l);
+      } else {
+        //DO NOTHING
+      }
+    }
+    return linesToReturn;
+  }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = InnerMonster;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class Vec3 {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        // this.set(0, 0, 0)
+    }
+
+    set(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Vec3;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Cell_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(1);
+
+
+
+
+let w = 20;
+
+class Field {
+    constructor() {
+        this.grid = this.new2DArray(20, 20);
+        this.grid = this.loadBoxes(this.grid);
+
+        this.getFlood = [];
+        this.floodArr = [];
+    }
+
+    floodFill(cell) {
+        let grid = this.grid;
+        if (cell.on === false && cell.hasFlooded === false) {
+            cell.hasFlooded = true;
+            this.floodArr.push(cell.i);
+
+            this.floodFill(grid[cell.i[0]][cell.i[1] + 1]);
+            this.floodFill(grid[cell.i[0]][cell.i[1] - 1]);
+            this.floodFill(grid[cell.i[0] + 1][cell.i[1]]);
+            this.floodFill(grid[cell.i[0] - 1][cell.i[1]]);
+
+            return this.floodArr;
+        }
+    }
+
+    floodReset() {
+        this.floodArr = [];
+        for (let i = 0; i < this.grid.length; i++) {
+            for (let j = 0; j < this.grid[i].length; j++) {
+                this.grid[i][j].hasFlooded = false;
+            }
+        }
+    }
+
+    checkFloodDir(dir) {
+
+        if (!dir.on && !dir.hasFlooded && !dir.tail) {
+            let buffer = this.floodFill(this.grid[dir.i[0]][dir.i[1]]);
+            this.getFlood.push(buffer);
+            this.floodArr = [];
+        }
+    }
+
+    checkArrForMonster(arr) {
+        let currentX;
+        let currentY;
+        let currentCell;
+        let currentSpace;
+        let foundMoster;
+        let bouncers = [{ location: { x: 20, y: 20 } }];
+        for (let i = 0; i < arr.length; i++) {
+            currentSpace = arr[i];
+            foundMoster = false;
+
+            for (let ii = 0; ii < currentSpace.length; ii++) {
+                currentX = currentSpace[ii][0];
+                currentY = currentSpace[ii][1];
+                currentCell = this.grid[currentX][currentY];
+
+                for (let iii = 0; iii < bouncers.length; iii++) {
+                    if (this.dist(currentCell.x, currentCell.y, bouncers[iii].location.x, bouncers[iii].location.y) < w) {
+                        foundMoster = true;
+                    }
+                }
+                // for (let iii = 0; iii<eaters.length; iii++){
+                //     if (dist(currentCell.x,currentCell.y, eaters[iii].location.x, eaters[iii].location.y) < w){
+                //         foundMoster = true
+                //     }
+                // }
+            }
+            if (foundMoster) {
+                //DO NOTHING
+            } else {
+                for (let ii = 0; ii < currentSpace.length; ii++) {
+                    currentX = currentSpace[ii][0];
+                    currentY = currentSpace[ii][1];
+                    currentCell = this.grid[currentX][currentY];
+                    currentCell.on = true;
+                    currentCell.mesh.mesh.visible = true;
+                }
+            }
+        }
+    }
+
+    dist(x1, y1, x2, y2) {
+        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    }
+
+    checkFlood(tail) {
+        var grid = this.grid;
+
+        let x, y, potFloodUp, potFloodDown, potFloodLeft, potFloodRight;
+        let getFlood = this.getFlood;
+
+        for (let k = 0; k < tail.arr.length; k++) {
+            x = tail.arr[k].x;
+            y = tail.arr[k].y;
+            potFloodDown = grid[x][y + 1];
+            potFloodUp = grid[x][y - 1];
+            potFloodRight = grid[x - 1][y];
+            potFloodLeft = grid[x + 1][y];
+
+            this.checkFloodDir(potFloodDown);
+            this.checkFloodDir(potFloodUp);
+            this.checkFloodDir(potFloodRight);
+            this.checkFloodDir(potFloodLeft);
+
+            console.log(this.getFlood);
+        }
+
+        this.checkArrForMonster(this.getFlood);
+        this.floodReset();
+    }
+
+    emptyRoute() {
+        for (let i = 0; i < this.grid.length; i++) {
+            for (let j = 0; j < this.grid[i].length; j++) {
+                this.grid[i][j].tail = false;
+            }
+        }
+    }
+
+    new2DArray(rows, cols) {
+        let arr = new Array(rows);
+        for (let i = 0; i < arr.length; i++) {
+            arr[i] = new Array(cols);
+            for (let j = 0; j < arr[i].length; j++) {
+                arr[i][j] = 0;
+            }
+        }
+        return arr;
+    }
+
+    loadBoxes(grid) {
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                let size = 20;
+                let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
+                let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
+
+                let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
+                entity.setPosition(i * size, j * size, 0);
+
+                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_0__Cell_js__["a" /* Cell */](i, j);
+
+                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
+                    entity.mesh.visible = true;
+                    grid[i][j].on = true;
+                    grid[i][j].onPermanent = true;
+                } else {
+                    entity.mesh.visible = false;
+                }
+                grid[i][j].mesh = entity;
+            }
+        }
+
+        return grid;
+    }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+
+
+let floodArr = [];
+let w = 20;
+class Cell {
+    constructor(x, y) {
+        this.x = x * w;
+        this.y = y * w;
+        this.x2 = this.x + w / 2;
+        this.y2 = this.y + w / 2;
+        this.i = [x, y];
+        this.on = false;
+        this.on2 = false;
+        this.onPermanent = false;
+        this.hasFlooded = false;
+        this.tail = false;
+        this.mesh;
+
+        this.lines = [{ pos: "top", x1: this.x, y1: this.y, x2: this.x + w, y2: this.y }, { pos: "right", x1: this.x + w, y1: this.y, x2: this.x + w, y2: this.y + w }, { pos: "bottom", x1: this.x, y1: this.y + w, x2: this.x + w, y2: this.y + w }, { pos: "left", x1: this.x, y1: this.y, x2: this.x, y2: this.y + w }];
+        this.activeLines = [];
+        this.linesPushed = false;
+    }
+
+    showLine() {
+        let line;
+        for (let i = 0; i < this.activeLines.length; i++) {
+            line = this.activeLines[i];
+            if (this.on) {
+                fill(100, 0, 0);
+                stroke(255, 0, 255);
+                fill(255, 120, 120);
+                bouncers[0].lineShow(line.x1, line.y1, line.x2, line.y2);
+            }
+        }
+    }
+    show() {
+        if (this.on2) {
+            noStroke();
+            fill(100, 0, 0);
+        } else if (this.on) {
+            stroke(1);
+            fill(0, 0, 150);
+            rect(this.x, this.y, 20, 20);
+        } else {
+            noStroke();
+
+            fill(0, 0, 0, 0);
+        }
+        rect(this.x, this.y, 20, 20);
+    }
+
+    lineCheck() {
+
+        this.activeLines = [];
+
+        let thisX = this.i[0];
+        let thisY = this.i[1];
+
+        let above = thisY - 1;
+        let below = thisY + 1;
+        let left = thisX - 1;
+        let right = thisX + 1;
+
+        if (above >= 0 && grid[thisX][above].on === false && grid[thisX][above].tail === false) {
+            this.activeLines.push(this.lines[0]);
+        }
+        if (left >= 0 && grid[left][thisY].on === false && grid[left][thisY].tail === false) {
+            this.activeLines.push(this.lines[3]);
+        }
+        if (below < cols && grid[thisX][below].on === false && grid[thisX][below].tail === false) {
+            this.activeLines.push(this.lines[2]);
+        }
+        if (right < rows && grid[right][thisY].on === false && grid[right][thisY].tail === false) {
+            this.activeLines.push(this.lines[1]);
+        }
+    }
+
+    lineConsolidation(i) {
+        let thisX = this.i[0];
+        let thisY = this.i[1];
+
+        let above = thisY - 1;
+        let below = thisY + 1;
+        let left = thisX - 1;
+        let right = thisX + 1;
+
+        this.activeLines.forEach(data => {
+            lines.push(data);
+        });
+    }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Cell;
+
+
+/***/ }),
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

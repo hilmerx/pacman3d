@@ -1,11 +1,12 @@
 import * as THREE from 'three'
+import {TailCell} from './Tail.js'
 
 let w = 20
 let cols = 20
 let rows = 20
 
 export class Pac {
-    constructor(geometry, material){
+    constructor(){
         this.geometry = new THREE.SphereGeometry( 10, 32, 32 )
         this.material = new THREE.MeshBasicMaterial( {color: 0xffff00} )
         this.mesh = new THREE.Mesh(this.geometry, this.material)
@@ -40,16 +41,16 @@ export class Pac {
         this.mesh.position.set(x, y, z)
     }
 
-    update(grid){
+    update(field, tail){
 
         this.move()
         this.moveAni()
 
-        this.take(grid)
+        this.take(field, tail)
 
-        this.traits.forEach(trait => {
-            trait(this.mesh)
-        })
+        // this.traits.forEach(trait => {
+        //     trait(this.mesh)
+        // })
         // this.mesh.position.set(this.x, this.pos.y, this.pos.z)
     }
 
@@ -168,7 +169,6 @@ export class Pac {
                 if (eventName === 'keyup') {
                     if (this.direction==="right" && keyCode===39 && !this.flying){
                         this.keyIsPressed=false
-
                         this.direction = ""
 
                     }
@@ -196,40 +196,41 @@ export class Pac {
 
 
 
-    take(grid){
+    take(field, tailInput){
+        let grid = field.grid
+        let tail = tailInput
+        // console.log(tail);
         for (let i = 0; i<rows;i++){
             for (let j = 0; j<cols;j++){
-                if(this.x-w/2 === grid[i][j].x && this.y-w/2 === grid[i][j].y && grid[i][j].on === false){
+                if(this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false){
                     this.flying = true;
                 }
 
 
-                if(this.prevX-w/2 === grid[i][j].x && this.prevY-w/2 === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true){
+                if(this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true){
                     grid[i][j].tail = true
                     tail.arr.push(new TailCell(i,j))
-                    initLineChecks()
-
                 }
             }
         }
 
         for (let i = 0; i<rows;i++){
             for (let j = 0; j<cols;j++){
-                if(this.x-w/2 === grid[i][j].x && this.y-w/2 === grid[i][j].y && grid[i][j].on === true && this.flying){
-
+                if(this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === true && this.flying){
                     for (let k = 0; k<tail.arr.length;k++){
+                        grid[tail.arr[k].x][tail.arr[k].y].mesh.mesh.visible = true
                         grid[tail.arr[k].x][tail.arr[k].y].on = true
                     }
 
-                    checkFlood()
+
+                    field.checkFlood(tail)
                     tail.arr = []
                     tail.waveInitArr = []
-                    emptyRoute()
-                    initLineChecks()
+                    field.emptyRoute()
+                    // initLineChecks()
                     this.flying = false;
-                    if (!this.keyIsPressed){
-                        this.direction=""
-                    }
+
+                    this.direction=""
                 }
             }
         }
@@ -242,6 +243,5 @@ export class Pac {
         }
     }
 }
-
 
 

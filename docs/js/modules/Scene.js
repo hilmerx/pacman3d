@@ -2,8 +2,9 @@ import SceneManager from './SceneManager.js'
 import * as THREE from 'three'
 import {Box} from './Structures.js'
 import {Pac} from './Pac.js'
-import {Green} from './Enemies.js'
-import {Red} from './Enemies.js'
+import {Bouncer, Eater} from './Enemies.js'
+import {Tail} from './Tail.js'
+import {Field} from './Field.js'
 
 
 
@@ -12,7 +13,8 @@ export function loadScene(verts){
 
 
     let master = new SceneManager(canvas1)
-    master.camera.position.z = 1500
+    master.camera.position.z = 1000
+    // master.camera.position.y = 200
 
 
 
@@ -33,66 +35,30 @@ export function loadScene(verts){
     }
     master.addLight(light2)
 
-    let grid = new2DArray(20, 20)
+    master.field = new Field()
+    master.addGrid(master.field.grid)
 
-    grid = loadBoxes(grid, master)
+    master.tail = new Tail()
 
     let floor = new Box(new THREE.BoxGeometry( 400,  400, 20 ), new THREE.MeshBasicMaterial( {color: 0x333333} ))
     floor.setPosition(200-10, 200-10, -20)
     master.addEntity(floor)
 
-    let pacman = new Pac(grid)
+    let pacman = new Pac()
     pacman.setPosition(0, 0, 20)
     pacman.listenTo(window)
     master.addEntity(pacman)
 
-    let green = new Green()
-    green.setPosition(80, 80, -2)
+    let green = new Bouncer()
+    // green.setPosition(80, 80, -2)
     master.addEntity(green)
 
-    let red = new Red()
-    red.setPosition(120, 80, 2)
+    let red = new Eater()
+    // red.setPosition(120, 80, 2)
     master.addEntity(red)
 
-    window.grid = grid
     return master
 }
 
 
-
-function new2DArray(rows, cols){
-    let arr = new Array(rows)
-    for (let i = 0; i<arr.length; i++){
-        arr[i] = new Array(cols)
-        for (let j = 0; j<arr[i].length; j++){
-            arr[i][j] = 0
-        }
-    }
-    return arr
-}
-
-function loadBoxes(grid, scene){
-    for (let i = 0; i<grid.length; i++){
-        for (let j = 0; j<grid[i].length; j++){
-            let size = 20
-            let geometry = new THREE.BoxGeometry( size,  size, size )
-            let material = new THREE.MeshBasicMaterial( {color: 0x0000ff} )
-
-            let entity = new Box(geometry, material)
-
-            entity.setPosition(i * size, j * size, 0)
-
-            if (i === 0 || j === 0 || i === grid.length-1 || j === grid[i].length-1) {
-                entity.mesh.visible = true
-                entity.solid = true
-            } else {
-                entity.mesh.visible = false
-            }
-            grid[i][j] = entity
-            scene.addEntity(grid[i][j])
-        }
-    }
-
-    return grid
-}
 

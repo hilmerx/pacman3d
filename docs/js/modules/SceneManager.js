@@ -7,10 +7,12 @@ export default class SceneManager {
         this.scene = new THREE.Scene()
         this.camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 3000)
 
-        // this.controls = new THREE.OrbitControls( this.camera )
+        this.controls = new THREE.OrbitControls( this.camera )
         this.renderer = new THREE.WebGLRenderer({canvas: canvas1, anitalias: true})
         this.entities = []
         this.lights = []
+        this.field
+        this.tail
 
         this.boardContainer = new THREE.Object3D()
         this.boardContainer.position.set(-200,-200,0)
@@ -24,9 +26,8 @@ export default class SceneManager {
     }
 
     updateEntities(){
-        let scene = this.scene
         this.entities.forEach(entity => {
-            entity.update(scene)
+            entity.update(this.field, this.tail)
         })
     }
 
@@ -35,6 +36,14 @@ export default class SceneManager {
         let light = newLight.type
         light.position.set(...newLight.pos)
         this.scene.add(light)
+    }
+
+    addGrid(grid){
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                this.addEntity(grid[i][j].mesh)
+            }
+        }
     }
 
     addEntity(entity){
