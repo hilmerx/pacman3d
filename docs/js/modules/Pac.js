@@ -11,6 +11,7 @@ export class Pac {
         this.material = new THREE.MeshBasicMaterial( {color: 0xffff00} )
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.traits = []
+        this.type = 'pacman'
 
         this.x = this.mesh.position.x
         this.y = this.mesh.position.y
@@ -37,21 +38,16 @@ export class Pac {
         this.traits.push(trait)
     }
 
-    setPosition(x, y = 0, z) {
+    setPosition(x, y, z = 0) {
         this.mesh.position.set(x, y, z)
     }
 
-    update(field, tail){
+    update(master, tail){
 
         this.move()
         this.moveAni()
 
-        this.take(field, tail)
-
-        // this.traits.forEach(trait => {
-        //     trait(this.mesh)
-        // })
-        // this.mesh.position.set(this.x, this.pos.y, this.pos.z)
+        this.take(master, tail)
     }
 
 
@@ -196,20 +192,21 @@ export class Pac {
 
 
 
-    take(field, tailInput){
+    take(master, tailInput){
+        let field = master.field
         let grid = field.grid
         let tail = tailInput
-        // console.log(tail);
         for (let i = 0; i<rows;i++){
             for (let j = 0; j<cols;j++){
                 if(this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false){
-                    this.flying = true;
+                    this.flying = true
                 }
 
 
                 if(this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true){
                     grid[i][j].tail = true
                     tail.arr.push(new TailCell(i,j))
+                    tail.manUpdate()
                 }
             }
         }
@@ -223,14 +220,15 @@ export class Pac {
                     }
 
 
-                    field.checkFlood(tail)
+                    field.checkFlood(tail, master.enemies)
                     tail.arr = []
                     tail.waveInitArr = []
+                    tail.hideTail()
                     field.emptyRoute()
-                    // initLineChecks()
-                    this.flying = false;
+                    field.initLineChecks(master)
+                    this.flying = false
 
-                    this.direction=""
+                    this.direction = ''
                 }
             }
         }

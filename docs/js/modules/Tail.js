@@ -1,11 +1,81 @@
+import * as THREE from 'three'
+import {Box} from './Structures'
+import {new2DArray} from './Math.js'
+import {Cell} from './Cell.js'
+
 let w = 20
 
 export class Tail {
-    constructor(){
+    constructor(master){
         this.arr = []
         this.waveInitArr = []
         this.waveModulo = 0
+        this.grid = new2DArray(20, 20)
+        this.grid = this.loadBoxes(this.grid)
     }
+
+    manUpdate(){
+        this.arr.forEach(tile=>{
+            let x = tile.x
+            let y = tile.y
+
+            this.grid[x][y].mesh.mesh.visible = true
+        })
+
+    }
+
+    hideTail(){
+        let grid = this.grid
+
+        for (let i = 0; i<grid.length; i++){
+            for (let j = 0; j<grid[i].length; j++){
+                this.grid[i][j].mesh.mesh.visible = false
+            }
+        }
+    }    
+
+    loadBoxes(grid){
+        
+        for (let i = 0; i<grid.length; i++){
+            for (let j = 0; j<grid[i].length; j++){
+                let size = 20
+                let geometry = new THREE.BoxGeometry( size,  size, size )
+                let material = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.2, color: 0xff99ff} )
+
+                let entity = new Box(geometry, material)
+                entity.setPosition(i * size, j * size, 0)
+
+                grid[i][j] = new Cell(i, j)
+
+
+                entity.mesh.visible = false
+
+                grid[i][j].mesh = entity
+            }
+        }
+
+        return grid
+    }
+
+    makeTail(master){
+        this.arr.forEach((data) => {
+            if (data.wave) {
+                // noStroke()
+                // fill(200,0,150)
+            } else {
+                let size = 20
+                let geometry = new THREE.BoxGeometry( size,  size, size )
+                let material = new THREE.MeshBasicMaterial( {color: 0x0000ff} )
+
+                let tailBuff = new Box(geometry, material)
+                tailBuff.setPosition(data.x* w, data.y* w, 20, 20)
+                master.addEntity(tailBuff)
+
+            }
+            // rect(data.x*w, data.y*w, 20, 20)
+        })
+    }
+
 
     waveInit(x,y) {
         this.arr.forEach((data, nr)=>{
@@ -35,45 +105,6 @@ export class Tail {
         this.waveModulo++
     }
 
-    show(){
-        tail.arr.forEach((data) => {
-            if (data.wave) {
-                noStroke()
-                fill(200,0,150)
-            } else {
-                noStroke()
-                fill(20)
-            }
-            rect(data.x*w, data.y*w, 20, 20)
-        })
-    }
-
-    lineCheck(){
-
-        this.activeLines = []
-
-        let thisX = this.x
-        let thisY = this.y
-
-        let above = thisY-1
-        let below = thisY+1
-        let left = thisX-1
-        let right = thisX+1
-
-        if (above >= 0 && grid[thisX][above].on === false) {
-            this.activeLines.push(this.lines[0])
-        }
-        if (left >= 0 && grid[left][thisY].on === false) {
-            this.activeLines.push(this.lines[3])
-        }
-        if (below < rows && grid[thisX][below].on === false) {
-            this.activeLines.push(this.lines[2])
-        }
-        if (right < cols && grid[right][thisY].on === false) {
-            this.activeLines.push(this.lines[1])
-        }
-
-    }
 }
 
 

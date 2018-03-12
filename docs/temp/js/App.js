@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -46010,6 +46010,60 @@ function LensFlare() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["c"] = dist;
+/* harmony export (immutable) */ __webpack_exports__["d"] = new2DArray;
+function dist(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+class Vec3 {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        // this.set(0, 0, 0)
+    }
+
+    set(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = Vec3;
+
+
+class Vec2 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    set(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Vec2;
+
+
+function new2DArray(rows, cols) {
+    let arr = new Array(rows);
+    for (let i = 0; i < arr.length; i++) {
+        arr[i] = new Array(cols);
+        for (let j = 0; j < arr[i].length; j++) {
+            arr[i][j] = 0;
+        }
+    }
+    return arr;
+}
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
 
 
@@ -46044,17 +46098,87 @@ class Box {
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Structures__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Math_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Cell_js__ = __webpack_require__(4);
+
+
+
+
+
 let w = 20;
 
 class Tail {
-    constructor() {
+    constructor(master) {
         this.arr = [];
         this.waveInitArr = [];
         this.waveModulo = 0;
+        this.grid = Object(__WEBPACK_IMPORTED_MODULE_2__Math_js__["d" /* new2DArray */])(20, 20);
+        this.grid = this.loadBoxes(this.grid);
+    }
+
+    manUpdate() {
+        this.arr.forEach(tile => {
+            let x = tile.x;
+            let y = tile.y;
+
+            this.grid[x][y].mesh.mesh.visible = true;
+        });
+    }
+
+    hideTail() {
+        let grid = this.grid;
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                this.grid[i][j].mesh.mesh.visible = false;
+            }
+        }
+    }
+
+    loadBoxes(grid) {
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                let size = 20;
+                let geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["BoxGeometry"](size, size, size);
+                let material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ transparent: true, opacity: 0.2, color: 0xff99ff });
+
+                let entity = new __WEBPACK_IMPORTED_MODULE_1__Structures__["a" /* Box */](geometry, material);
+                entity.setPosition(i * size, j * size, 0);
+
+                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_3__Cell_js__["a" /* Cell */](i, j);
+
+                entity.mesh.visible = false;
+
+                grid[i][j].mesh = entity;
+            }
+        }
+
+        return grid;
+    }
+
+    makeTail(master) {
+        this.arr.forEach(data => {
+            if (data.wave) {
+                // noStroke()
+                // fill(200,0,150)
+            } else {
+                let size = 20;
+                let geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["BoxGeometry"](size, size, size);
+                let material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x0000ff });
+
+                let tailBuff = new __WEBPACK_IMPORTED_MODULE_1__Structures__["a" /* Box */](geometry, material);
+                tailBuff.setPosition(data.x * w, data.y * w, 20, 20);
+                master.addEntity(tailBuff);
+            }
+            // rect(data.x*w, data.y*w, 20, 20)
+        });
     }
 
     waveInit(x, y) {
@@ -46085,44 +46209,6 @@ class Tail {
         this.waveModulo++;
     }
 
-    show() {
-        tail.arr.forEach(data => {
-            if (data.wave) {
-                noStroke();
-                fill(200, 0, 150);
-            } else {
-                noStroke();
-                fill(20);
-            }
-            rect(data.x * w, data.y * w, 20, 20);
-        });
-    }
-
-    lineCheck() {
-
-        this.activeLines = [];
-
-        let thisX = this.x;
-        let thisY = this.y;
-
-        let above = thisY - 1;
-        let below = thisY + 1;
-        let left = thisX - 1;
-        let right = thisX + 1;
-
-        if (above >= 0 && grid[thisX][above].on === false) {
-            this.activeLines.push(this.lines[0]);
-        }
-        if (left >= 0 && grid[left][thisY].on === false) {
-            this.activeLines.push(this.lines[3]);
-        }
-        if (below < rows && grid[thisX][below].on === false) {
-            this.activeLines.push(this.lines[2]);
-        }
-        if (right < cols && grid[right][thisY].on === false) {
-            this.activeLines.push(this.lines[1]);
-        }
-    }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Tail;
 
@@ -46140,12 +46226,44 @@ class TailCell {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+
+
+let w = 20;
+
+class Cell {
+    constructor(x, y) {
+        this.x = x * w;
+        this.y = y * w;
+        this.x2 = this.x + w / 2;
+        this.y2 = this.y + w / 2;
+        this.i = [x, y];
+        this.on = false;
+        this.on2 = false;
+        this.onPermanent = false;
+        this.hasFlooded = false;
+        this.tail = false;
+        this.mesh;
+
+        this.lines = [{ pos: "top", x1: this.x, y1: this.y, x2: this.x + w, y2: this.y }, { pos: "right", x1: this.x + w, y1: this.y, x2: this.x + w, y2: this.y + w }, { pos: "bottom", x1: this.x, y1: this.y + w, x2: this.x + w, y2: this.y + w }, { pos: "left", x1: this.x, y1: this.y, x2: this.x, y2: this.y + w }];
+        this.activeLines = [];
+        this.linesPushed = false;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Cell;
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__modules_Keyboard_js__ = __webpack_require__(13);
 
 
@@ -46160,18 +46278,18 @@ Promise.all([Object(__WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__["a" /* loadS
 });
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = loadScene;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pac_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Enemies_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Tail_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Field_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pac_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Enemies_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Tail_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Field_js__ = __webpack_require__(12);
 
 
 
@@ -46180,19 +46298,12 @@ Promise.all([Object(__WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__["a" /* loadS
 
 
 
-function loadScene(verts) {
+function loadScene() {
     //Init scene
 
 
     let master = new __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__["a" /* default */](canvas1);
     master.camera.position.z = 1000;
-    // master.camera.position.y = 200
-
-
-    // var axesHelper = new THREE.AxesHelper( 5 )
-    // master.scene.add( axesHelper )
-
-
     //Lights
     let light1 = {
         type: new __WEBPACK_IMPORTED_MODULE_1_three__["AmbientLight"](0x888888),
@@ -46206,10 +46317,11 @@ function loadScene(verts) {
     };
     master.addLight(light2);
 
-    master.field = new __WEBPACK_IMPORTED_MODULE_6__Field_js__["a" /* Field */]();
+    master.field = new __WEBPACK_IMPORTED_MODULE_6__Field_js__["a" /* Field */](master);
     master.addGrid(master.field.grid);
 
     master.tail = new __WEBPACK_IMPORTED_MODULE_5__Tail_js__["a" /* Tail */]();
+    master.addGrid(master.tail.grid);
 
     let floor = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](400, 400, 20), new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x333333 }));
     floor.setPosition(200 - 10, 200 - 10, -20);
@@ -46220,38 +46332,37 @@ function loadScene(verts) {
     pacman.listenTo(window);
     master.addEntity(pacman);
 
-    let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Bouncer */]();
-    // green.setPosition(80, 80, -2)
+    let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Bouncer */](master);
     master.addEntity(green);
-
-    let red = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["b" /* Eater */]();
-    // red.setPosition(120, 80, 2)
-    master.addEntity(red);
 
     return master;
 }
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
 
-__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(6)(__WEBPACK_IMPORTED_MODULE_0_three__);
+__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(8)(__WEBPACK_IMPORTED_MODULE_0_three__);
 
 class SceneManager {
     constructor() {
 
         this.scene = new __WEBPACK_IMPORTED_MODULE_0_three__["Scene"]();
-        this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["PerspectiveCamera"](35, window.innerWidth / window.innerHeight, 0.1, 3000);
+        this.camera = new __WEBPACK_IMPORTED_MODULE_0_three__["PerspectiveCamera"](35, window.innerWidth / (window.innerHeight - 5), 0.1, 3000);
 
         this.controls = new __WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"](this.camera);
+        this.controls.enableKeys = false;
+
         this.renderer = new __WEBPACK_IMPORTED_MODULE_0_three__["WebGLRenderer"]({ canvas: canvas1, anitalias: true });
         this.entities = [];
         this.lights = [];
         this.field;
         this.tail;
+        this.enemies = [];
+        this.pacman = [];
 
         this.boardContainer = new __WEBPACK_IMPORTED_MODULE_0_three__["Object3D"]();
         this.boardContainer.position.set(-200, -200, 0);
@@ -46259,14 +46370,14 @@ class SceneManager {
 
         this.renderer.setClearColor(0xeefff999);
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(window.innerWidth, window.innerHeight - 5);
 
         this.update();
     }
 
     updateEntities() {
         this.entities.forEach(entity => {
-            entity.update(this.field, this.tail);
+            entity.update(this, this.tail);
         });
     }
 
@@ -46286,8 +46397,22 @@ class SceneManager {
     }
 
     addEntity(entity) {
-        this.boardContainer.add(entity.mesh);
+        if (entity.mesh) {
+            this.addEntitytoMesh(entity);
+        }
+        if (entity.type === 'bouncer') {
+            this.enemies.push(entity);
+        }
+
+        if (entity.type === 'pacman') {
+            this.pacman.push(entity);
+        }
+
         this.entities.push(entity);
+    }
+
+    addEntitytoMesh(entity) {
+        this.boardContainer.add(entity.mesh);
     }
 
     update() {
@@ -46295,12 +46420,44 @@ class SceneManager {
         this.updateEntities();
         this.renderer.render(this.scene, this.camera);
     }
+
+    die() {
+        let grid = this.field.grid;
+        this.field.getFlood = [];
+        this.field.floodArr = [];
+        this.pacman[0].setPosition(0, 0, 20);
+        this.pacman[0].x = 0;
+        this.pacman[0].y = 0;
+
+        this.pacman[0].prevX = 0;
+        this.pacman[0].prevY = 0;
+        // tail.waveInitArr = []
+
+        this.tail.arr = [];
+        this.pacman[0].direction = '';
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                this.tail.grid[i][j].mesh.mesh.visible = false;
+                grid[i][j].activeLines = [];
+
+                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
+                    grid[i][j].mesh.mesh.visible = true;
+                    grid[i][j].on = true;
+                } else {
+                    grid[i][j].on = false;
+
+                    grid[i][j].mesh.mesh.visible = false;
+                }
+            }
+        }
+    }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = SceneManager;
 
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -47326,12 +47483,12 @@ module.exports = function( THREE ) {
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tail_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tail_js__ = __webpack_require__(3);
 
 
 
@@ -47345,6 +47502,7 @@ class Pac {
         this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xffff00 });
         this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
         this.traits = [];
+        this.type = 'pacman';
 
         this.x = this.mesh.position.x;
         this.y = this.mesh.position.y;
@@ -47369,21 +47527,16 @@ class Pac {
         this.traits.push(trait);
     }
 
-    setPosition(x, y = 0, z) {
+    setPosition(x, y, z = 0) {
         this.mesh.position.set(x, y, z);
     }
 
-    update(field, tail) {
+    update(master, tail) {
 
         this.move();
         this.moveAni();
 
-        this.take(field, tail);
-
-        // this.traits.forEach(trait => {
-        //     trait(this.mesh)
-        // })
-        // this.mesh.position.set(this.x, this.pos.y, this.pos.z)
+        this.take(master, tail);
     }
 
     move() {
@@ -47509,10 +47662,10 @@ class Pac {
         });
     }
 
-    take(field, tailInput) {
+    take(master, tailInput) {
+        let field = master.field;
         let grid = field.grid;
         let tail = tailInput;
-        // console.log(tail);
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
                 if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false) {
@@ -47522,6 +47675,7 @@ class Pac {
                 if (this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true) {
                     grid[i][j].tail = true;
                     tail.arr.push(new __WEBPACK_IMPORTED_MODULE_1__Tail_js__["b" /* TailCell */](i, j));
+                    tail.manUpdate();
                 }
             }
         }
@@ -47534,14 +47688,15 @@ class Pac {
                         grid[tail.arr[k].x][tail.arr[k].y].on = true;
                     }
 
-                    field.checkFlood(tail);
+                    field.checkFlood(tail, master.enemies);
                     tail.arr = [];
                     tail.waveInitArr = [];
+                    tail.hideTail();
                     field.emptyRoute();
-                    // initLineChecks()
+                    field.initLineChecks(master);
                     this.flying = false;
 
-                    this.direction = "";
+                    this.direction = '';
                 }
             }
         }
@@ -47557,25 +47712,25 @@ class Pac {
 
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__InnerMonster__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Vec3__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__InnerMonster__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Math__ = __webpack_require__(1);
 
 
 
 
 class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
-    constructor(id) {
+    constructor() {
         super();
 
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Vec3__["a" /* default */](80, 80, -2);
-
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["b" /* Vec3 */](80, 80, -2);
+        this.type = 'bouncer';
         this.d = 16;
-        this.r = 8;
+        this.r = 10;
         this.mass = 10;
         this.angleArr = [-90, -180];
         this.angleArr = [0, -180];
@@ -47591,27 +47746,25 @@ class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default
         this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
         this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
         this.ID = this.mesh.uuid;
-        this.setPosition(this.location.x, this.location.y, this.location.z);
-
-        console.log(this.location);
+        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
     }
 
     setPosition(x, y = 0, z) {
         this.mesh.position.set(x, y, z);
     }
 
-    update() {
-        // this.collideWithRoute()
-        // this.collideWithBorder()
+    update(master) {
+        this.collideWithTail(master);
+        this.collideWithBorder(master.field.consolidatedLines);
         // if (gameActive) {
         this.walk();
-        this.setPosition(this.location.x, this.location.y, this.location.z);
+        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
         // this.collideWithPacman()
     }
 
-    collideWithBorder() {
-        collidingLines = this.lineCollideCheck();
-        collidingLineEnd = this.lineEndCollideCheck();
+    collideWithBorder(lines) {
+        let collidingLines = this.lineCollideCheck(lines);
+        let collidingLineEnd = this.lineEndCollideCheck(lines);
         if (collidingLines.length > 0) {
             collidingLines.forEach(line => {
                 this.bounce(line);
@@ -47631,7 +47784,8 @@ class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default *
     constructor(id) {
         super();
 
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Vec3__["a" /* default */](28 + id * 50 * 2, 200 - id * 8, 2);
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["b" /* Vec3 */](28 + id * 50 * 2, 200 - id * 8, 2);
+        this.type = 'eater';
 
         this.d = 16;
         this.r = 8;
@@ -47685,259 +47839,7 @@ class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default *
         }
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["b"] = Eater;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-class InnerMonster {
-
-  walk() {
-    this.location.y -= Math.sin(this.angle) * this.speed;
-    this.location.x += Math.cos(this.angle) * this.speed;
-    this.speed = this.origSpeed;
-  }
-
-  collideWithRoute() {
-    if (tail.arr.length > 0) {
-      for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-          if (grid[i][j].tail && this.squareCollide(i, j)) {
-            tail.waveInit(i, j);
-          }
-        }
-      }
-    }
-  }
-
-  collideWithPacman() {
-    if (dist(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
-      die();
-    }
-  }
-
-  setPostCollSpeedAngle() {
-    if (this.collMonster === true) {
-      this.speed = this.speedTemp;
-      this.angle = this.angleTemp;
-      this.collMonster = false;
-    }
-  }
-
-  collideWithMonster() {
-    for (let i = 0; i < monsters.length; i++) {
-      for (let j = 0; j < monsters[i].length; j++) {
-        let monster = monsters[i][j];
-        if (dist(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r + monster.r && monster.id + 1 !== this.id + 1) {
-          let second = monster;
-          thisSpeedX = Math.cos(this.angle) * this.speed;
-          thisSpeedY = Math.sin(this.angle) * this.speed;
-          secondSpeedX = Math.cos(second.angle) * second.speed;
-          secondSpeedY = Math.sin(second.angle) * second.speed;
-
-          collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
-          collisionPointY = (this.y * second.r + second.y * this.r) / (firstBall.r + second.r);
-
-          thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
-          thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
-          secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
-          secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
-
-          this.collMonster = true;
-          this.angleTemp = atan2(thisNewY, thisNewX);
-          this.speedTemp = dist(0, 0, thisNewX, thisNewY);
-
-          return;
-        }
-      }
-    }
-  }
-
-  bounce(line) {
-    let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
-    let linePerpSlope = -1 / lineSlope;
-    let linePerpVector = new p5.Vector(1, linePerpSlope);
-
-    let thisAngleDeg = this.angle * (180 / PI);
-    let linePerpRad = Math.atan(linePerpSlope, 1);
-
-    let linePerpDeg = linePerpRad * (180 / PI) * -1 + 180;
-    let newAngleDiff = (thisAngleDeg - linePerpDeg) * 2;
-    let newAngle = thisAngleDeg - newAngleDiff + 180;
-    let newAngleRad = newAngle * (Math.PI / 180);
-    this.angle = newAngleRad;
-    this.speed = this.speed;
-  }
-
-  endPointBounce(point) {
-    let p = point;
-    pc = { x: p.x, y: p.y, r: this.r };
-    dot = { x: this.location.x, y: this.location.y, angle: this.angle * (180 / PI) };
-
-    diffY = dot.y - pc.y;
-    diffX = dot.x - pc.x;
-
-    angleOfColl = atan2(diffY, diffX) * -1 * (180 / PI);
-
-    diffAngle = (dot.angle - 180 - angleOfColl) * 2;
-    newAngleinRad = (dot.angle - 180 - diffAngle) * (PI / 180);
-
-    this.angle = newAngleinRad;
-    this.speed = this.speed;
-  }
-
-  squareCollide(i, j) {
-
-    let distX = Math.abs(this.location.x - grid[i][j].x - w / 2);
-    let distY = Math.abs(this.location.y - grid[i][j].y - w / 2);
-
-    if (distX > w / 2 + this.r) {
-      return false;
-    }
-    if (distY > w / 2 + this.r) {
-      return false;
-    }
-
-    if (distX <= w / 2) {
-      return true;
-    }
-    if (distY <= w / 2) {
-      return true;
-    }
-
-    let dx = distX - w / 2;
-    let dy = distY - w / 2;
-
-    return dx * dx + dy * dy <= this.r * this.r;
-  }
-
-  lineEndCollideCheck(obj) {
-
-    let point;
-    let lines;
-    let endPointCollides;
-
-    lines = allLines;
-    for (let i = 0; i < lines.length; i++) {
-      let l = lines[i];
-
-      if (dist(l.x1, l.y1, this.location.x, this.location.y) < dist(l.x2, l.y2, this.location.x, this.location.y)) {
-        point = { x: l.x1, y: l.y1 };
-      } else {
-        point = { x: l.x2, y: l.y2 };
-      }
-
-      endPointCollides = dist(this.location.x, this.location.y, point.x, point.y) < this.r;
-
-      if (endPointCollides) {
-        return point;
-      } else {
-        //DO NOTHING
-      }
-    }
-  }
-
-  lineCollideCheck(obj) {
-    let lines = allLines;
-    let lineLength;
-    let line;
-    let lineSlope;
-    let objSlope;
-    let lineOff;
-    let objOff;
-    let newX;
-    let newY;
-    let hor;
-    let v;
-    let m;
-    let m2;
-    let dotProduct1;
-    let dotProduct2;
-    let withinBoundries;
-    let point;
-    let endPointCollides;
-    let isOnInfLine;
-    let linesToReturn = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      l = lines[i];
-      lineLength = dist(l.x1, l.y1, l.x2, l.y2);
-
-      if (l.x1 === l.x2) {
-        lineSlope = 0;
-      } else {
-        lineSlope = (l.y2 - l.y1) / (l.x2 - l.x1);
-      }
-
-      if (lineSlope === 0) {
-        objSlope = 0;
-      } else {
-        objSlope = -1 / lineSlope;
-      }
-
-      lineOff = l.y1 - l.x1 * lineSlope;
-      objOff = this.location.y - this.location.x * objSlope;
-
-      if (l.x1 == l.x2) {
-        newX = l.x1;
-        newY = this.location.y;
-      } else if (l.y1 == l.y2) {
-        newY = l.y1;
-        newX = this.location.x;
-      } else {
-        newX = (objOff - lineOff) / (lineSlope - objSlope);
-        newY = newX * objSlope + objOff;
-      }
-
-      hor = { x: dist(l.x1, l.y1, l.x2, l.x1), y: 0 };
-      v = { x: l.x2 - l.x1, y: l.y2 - l.y1 };
-      m = { x: this.location.x - l.x1, y: this.location.y - l.y1 };
-      m2 = { x: this.location.x - l.x2, y: this.location.y - l.y2 };
-
-      dotProduct1 = v.x * m.x + v.y * m.y;
-      dotProduct2 = v.x * m2.x + v.y * m2.y;
-
-      withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
-
-      isOnInfLine = dist(this.location.x, this.location.y, newX, newY) < this.r;
-
-      if (isOnInfLine && withinBoundries) {
-        linesToReturn.push(l);
-      } else {
-        //DO NOTHING
-      }
-    }
-    return linesToReturn;
-  }
-
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = InnerMonster;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-class Vec3 {
-    constructor(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        // this.set(0, 0, 0)
-    }
-
-    set(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Vec3;
+/* unused harmony export Eater */
 
 
 /***/ }),
@@ -47945,23 +47847,287 @@ class Vec3 {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Cell_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Math_js__ = __webpack_require__(1);
+
+
+let w = 20;
+
+class InnerMonster {
+
+    walk() {
+        this.location.y -= Math.sin(this.angle) * this.speed;
+        this.location.x += Math.cos(this.angle) * this.speed;
+        this.speed = this.origSpeed;
+    }
+
+    collideWithTail(master) {
+        let tail = master.tail;
+        if (tail.arr.length > 0) {
+            for (let i = 0; i < tail.grid.length; i++) {
+                for (let j = 0; j < tail.grid[i].length; j++) {
+                    if (tail.grid[i][j].mesh.mesh.visible === true && this.squareCollide(i, j, tail.grid)) {
+                        // tail.waveInit(i,j)
+                        master.die();
+                    }
+                }
+            }
+        }
+    }
+
+    collideWithPacman() {
+        if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
+            die();
+        }
+    }
+
+    setPostCollSpeedAngle() {
+        if (this.collMonster === true) {
+            this.speed = this.speedTemp;
+            this.angle = this.angleTemp;
+            this.collMonster = false;
+        }
+    }
+
+    collideWithMonster() {
+        for (let i = 0; i < monsters.length; i++) {
+            for (let j = 0; j < monsters[i].length; j++) {
+                let monster = monsters[i][j];
+                if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r + monster.r && monster.id + 1 !== this.id + 1) {
+                    let second = monster;
+                    thisSpeedX = Math.cos(this.angle) * this.speed;
+                    thisSpeedY = Math.sin(this.angle) * this.speed;
+                    secondSpeedX = Math.cos(second.angle) * second.speed;
+                    secondSpeedY = Math.sin(second.angle) * second.speed;
+
+                    collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
+                    collisionPointY = (this.y * second.r + second.y * this.r) / (firstBall.r + second.r);
+
+                    thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
+                    thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
+                    secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
+                    secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
+
+                    this.collMonster = true;
+                    this.angleTemp = atan2(thisNewY, thisNewX);
+                    this.speedTemp = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(0, 0, thisNewX, thisNewY);
+
+                    return;
+                }
+            }
+        }
+    }
+
+    bounce(line) {
+        let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
+        let linePerpSlope = -1 / lineSlope;
+        let linePerpVector = new __WEBPACK_IMPORTED_MODULE_0__Math_js__["a" /* Vec2 */](1, linePerpSlope);
+
+        let thisAngleDeg = this.angle * (180 / Math.PI);
+        let linePerpRad = Math.atan(linePerpSlope, 1);
+
+        let linePerpDeg = linePerpRad * (180 / Math.PI) * -1 + 180;
+        let newAngleDiff = (thisAngleDeg - linePerpDeg) * 2;
+        let newAngle = thisAngleDeg - newAngleDiff + 180;
+        let newAngleRad = newAngle * (Math.PI / 180);
+        this.angle = newAngleRad;
+        this.speed = this.speed;
+    }
+
+    endPointBounce(point) {
+        let p = point;
+        let pc = { x: p.x, y: p.y, r: this.r };
+        let dot = { x: this.location.x, y: this.location.y, angle: this.angle * (180 / Math.PI) };
+
+        let diffY = dot.y - pc.y;
+        let diffX = dot.x - pc.x;
+
+        let angleOfColl = Math.atan2(diffY, diffX) * -1 * (180 / Math.PI);
+
+        let diffAngle = (dot.angle - 180 - angleOfColl) * 2;
+        let newAngleinRad = (dot.angle - 180 - diffAngle) * (Math.PI / 180);
+
+        this.angle = newAngleinRad;
+        this.speed = this.speed;
+    }
+
+    squareCollide(i, j, grid) {
+
+        let distX = Math.abs(this.location.x - grid[i][j].x - w / 2);
+        let distY = Math.abs(this.location.y - grid[i][j].y - w / 2);
+
+        if (distX > w / 2 + this.r) {
+            return false;
+        }
+        if (distY > w / 2 + this.r) {
+            return false;
+        }
+
+        if (distX <= w / 2) {
+            return true;
+        }
+        if (distY <= w / 2) {
+            return true;
+        }
+
+        let dx = distX - w / 2;
+        let dy = distY - w / 2;
+
+        return dx * dx + dy * dy <= this.r * this.r;
+    }
+
+    lineEndCollideCheck(lines) {
+
+        let point;
+        let endPointCollides;
+
+        for (let i = 0; i < lines.length; i++) {
+            let l = lines[i];
+
+            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(l.x1, l.y1, this.location.x, this.location.y) < Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(l.x2, l.y2, this.location.x, this.location.y)) {
+                point = { x: l.x1, y: l.y1 };
+            } else {
+                point = { x: l.x2, y: l.y2 };
+            }
+
+            endPointCollides = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, point.x, point.y) < this.r;
+
+            if (endPointCollides) {
+                return point;
+            } else {
+                //DO NOTHING
+            }
+        }
+    }
+
+    lineCollideCheck(lines) {
+        let lineSlope;
+        let objSlope;
+        let lineOff;
+        let objOff;
+        let newX;
+        let newY;
+        let v;
+        let m;
+        let m2;
+        let dotProduct1;
+        let dotProduct2;
+        let withinBoundries;
+        let isOnInfLine;
+        let linesToReturn = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            let l = lines[i];
+
+            if (l.x1 === l.x2) {
+                lineSlope = 0;
+            } else {
+                lineSlope = (l.y2 - l.y1) / (l.x2 - l.x1);
+            }
+
+            if (lineSlope === 0) {
+                objSlope = 0;
+            } else {
+                objSlope = -1 / lineSlope;
+            }
+
+            lineOff = l.y1 - l.x1 * lineSlope;
+            objOff = this.location.y - this.location.x * objSlope;
+
+            if (l.x1 == l.x2) {
+                newX = l.x1;
+                newY = this.location.y;
+            } else if (l.y1 == l.y2) {
+                newY = l.y1;
+                newX = this.location.x;
+            } else {
+                newX = (objOff - lineOff) / (lineSlope - objSlope);
+                newY = newX * objSlope + objOff;
+            }
+
+            v = { x: l.x2 - l.x1, y: l.y2 - l.y1 };
+            m = { x: this.location.x - l.x1, y: this.location.y - l.y1 };
+            m2 = { x: this.location.x - l.x2, y: this.location.y - l.y2 };
+
+            dotProduct1 = v.x * m.x + v.y * m.y;
+            dotProduct2 = v.x * m2.x + v.y * m2.y;
+
+            withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
+
+            isOnInfLine = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, newX, newY) < this.r;
+
+            if (isOnInfLine && withinBoundries) {
+                linesToReturn.push(l);
+            } else {
+                //DO NOTHING
+            }
+        }
+        return linesToReturn;
+    }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = InnerMonster;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Cell_js__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Math_js__ = __webpack_require__(1);
+
 
 
 
 
 let w = 20;
+let cols = 20;
+let rows = 20;
 
 class Field {
-    constructor() {
-        this.grid = this.new2DArray(20, 20);
+    constructor(master) {
+        this.grid = Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["d" /* new2DArray */])(20, 20);
         this.grid = this.loadBoxes(this.grid);
 
         this.getFlood = [];
         this.floodArr = [];
+
+        this.lines = [];
+        this.consolidatedLines = [];
+        this.initLineChecks(master);
     }
+
+    loadBoxes(grid) {
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                let size = 20;
+                let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
+                let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
+
+                let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
+                entity.setPosition(i * size, j * size, 0);
+
+                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_0__Cell_js__["a" /* Cell */](i, j);
+
+                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
+                    entity.mesh.visible = true;
+                    grid[i][j].on = true;
+                    grid[i][j].onPermanent = true;
+                } else {
+                    entity.mesh.visible = false;
+                }
+                grid[i][j].mesh = entity;
+            }
+        }
+
+        return grid;
+    }
+
+    // Floodfill methods
+
 
     floodFill(cell) {
         let grid = this.grid;
@@ -47996,56 +48162,47 @@ class Field {
         }
     }
 
-    checkArrForMonster(arr) {
+    checkArrForMonster(floodAreas, enemies) {
         let currentX;
         let currentY;
         let currentCell;
-        let currentSpace;
+        let area;
         let foundMoster;
-        let bouncers = [{ location: { x: 20, y: 20 } }];
-        for (let i = 0; i < arr.length; i++) {
-            currentSpace = arr[i];
+
+        for (let i = 0; i < floodAreas.length; i++) {
+            area = floodAreas[i];
             foundMoster = false;
 
-            for (let ii = 0; ii < currentSpace.length; ii++) {
-                currentX = currentSpace[ii][0];
-                currentY = currentSpace[ii][1];
+            for (let ii = 0; ii < area.length; ii++) {
+                currentX = area[ii][0];
+                currentY = area[ii][1];
                 currentCell = this.grid[currentX][currentY];
 
-                for (let iii = 0; iii < bouncers.length; iii++) {
-                    if (this.dist(currentCell.x, currentCell.y, bouncers[iii].location.x, bouncers[iii].location.y) < w) {
+                for (let iii = 0; iii < enemies.length; iii++) {
+                    if (Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["c" /* dist */])(currentCell.x, currentCell.y, enemies[iii].location.x, enemies[iii].location.y) < w) {
                         foundMoster = true;
                     }
                 }
-                // for (let iii = 0; iii<eaters.length; iii++){
-                //     if (dist(currentCell.x,currentCell.y, eaters[iii].location.x, eaters[iii].location.y) < w){
-                //         foundMoster = true
-                //     }
-                // }
             }
             if (foundMoster) {
                 //DO NOTHING
             } else {
-                for (let ii = 0; ii < currentSpace.length; ii++) {
-                    currentX = currentSpace[ii][0];
-                    currentY = currentSpace[ii][1];
+                for (let ii = 0; ii < area.length; ii++) {
+                    currentX = area[ii][0];
+                    currentY = area[ii][1];
                     currentCell = this.grid[currentX][currentY];
                     currentCell.on = true;
                     currentCell.mesh.mesh.visible = true;
                 }
             }
         }
+        console.log("hej");
     }
 
-    dist(x1, y1, x2, y2) {
-        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-    }
-
-    checkFlood(tail) {
+    checkFlood(tail, monsters) {
         var grid = this.grid;
 
         let x, y, potFloodUp, potFloodDown, potFloodLeft, potFloodRight;
-        let getFlood = this.getFlood;
 
         for (let k = 0; k < tail.arr.length; k++) {
             x = tail.arr[k].x;
@@ -48059,11 +48216,9 @@ class Field {
             this.checkFloodDir(potFloodUp);
             this.checkFloodDir(potFloodRight);
             this.checkFloodDir(potFloodLeft);
-
-            console.log(this.getFlood);
         }
 
-        this.checkArrForMonster(this.getFlood);
+        this.checkArrForMonster(this.getFlood, monsters);
         this.floodReset();
     }
 
@@ -48075,111 +48230,88 @@ class Field {
         }
     }
 
-    new2DArray(rows, cols) {
-        let arr = new Array(rows);
-        for (let i = 0; i < arr.length; i++) {
-            arr[i] = new Array(cols);
-            for (let j = 0; j < arr[i].length; j++) {
-                arr[i][j] = 0;
-            }
-        }
-        return arr;
-    }
+    // Line methods
 
-    loadBoxes(grid) {
+    initLineChecks(master) {
+
+        let grid = this.grid;
 
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
-                let size = 20;
-                let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
-                let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
-
-                let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
-                entity.setPosition(i * size, j * size, 0);
-
-                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_0__Cell_js__["a" /* Cell */](i, j);
-
-                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
-                    entity.mesh.visible = true;
-                    grid[i][j].on = true;
-                    grid[i][j].onPermanent = true;
-                } else {
-                    entity.mesh.visible = false;
+                if (grid[i][j].on === true || grid[i][j].tail === true) {
+                    this.lineCheck(grid[i][j]);
                 }
-                grid[i][j].mesh = entity;
             }
         }
 
-        return grid;
+        let fieldMeshChildren = master.scene.children[0].children;
+        let fieldContainer = master.scene.children[0];
+
+        if (fieldMeshChildren.length > 0) {
+            this.emptyWalls(this.consolidatedLines, fieldMeshChildren, fieldContainer);
+        }
+
+        this.consolidatedLines = this.consolidateLines();
+
+        this.createWalls(this.consolidatedLines, master);
     }
 
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-
-
-let floodArr = [];
-let w = 20;
-class Cell {
-    constructor(x, y) {
-        this.x = x * w;
-        this.y = y * w;
-        this.x2 = this.x + w / 2;
-        this.y2 = this.y + w / 2;
-        this.i = [x, y];
-        this.on = false;
-        this.on2 = false;
-        this.onPermanent = false;
-        this.hasFlooded = false;
-        this.tail = false;
-        this.mesh;
-
-        this.lines = [{ pos: "top", x1: this.x, y1: this.y, x2: this.x + w, y2: this.y }, { pos: "right", x1: this.x + w, y1: this.y, x2: this.x + w, y2: this.y + w }, { pos: "bottom", x1: this.x, y1: this.y + w, x2: this.x + w, y2: this.y + w }, { pos: "left", x1: this.x, y1: this.y, x2: this.x, y2: this.y + w }];
-        this.activeLines = [];
-        this.linesPushed = false;
-    }
-
-    showLine() {
-        let line;
-        for (let i = 0; i < this.activeLines.length; i++) {
-            line = this.activeLines[i];
-            if (this.on) {
-                fill(100, 0, 0);
-                stroke(255, 0, 255);
-                fill(255, 120, 120);
-                bouncers[0].lineShow(line.x1, line.y1, line.x2, line.y2);
+    emptyWalls(lines, children, scene) {
+        for (var i = 0; i < lines.length; i++) {
+            for (var j = 0; j < children.length; j++) {
+                if (lines[i].ID === children[j].uuid) {
+                    scene.remove(children[j]);
+                }
             }
         }
     }
-    show() {
-        if (this.on2) {
-            noStroke();
-            fill(100, 0, 0);
-        } else if (this.on) {
-            stroke(1);
-            fill(0, 0, 150);
-            rect(this.x, this.y, 20, 20);
-        } else {
-            noStroke();
 
-            fill(0, 0, 0, 0);
-        }
-        rect(this.x, this.y, 20, 20);
+    createWalls(lines, master) {
+        lines.forEach(lineData => {
+            this.createWall(lineData, master);
+        });
     }
 
-    lineCheck() {
+    createWall(data, master) {
+        function minimumThickness(wall) {
+            if (wall === 0) {
+                wall = 2;
+            } else {
+                return wall;
+            }
+            return wall;
+        }
 
-        this.activeLines = [];
+        let distX = Math.abs(data.x1 - data.x2 - 4);
+        let distY = Math.abs(data.y1 - data.y2 - 4);
 
-        let thisX = this.i[0];
-        let thisY = this.i[1];
+        distX = minimumThickness(distX);
+        distY = minimumThickness(distY);
+
+        let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](distX, distY, 25);
+        let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0xff00ff });
+
+        let wall = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
+        // if (data.pos === 'bottom' || data.pos === 'top'){
+        //     wall.setPosition(data.x1 + 180-10, data.y1-10, 0)
+        // }
+
+        // if (data.pos === 'left' || data.pos === 'right'){
+        //     wall.setPosition(data.x1 -10, data.y1+ 180-10, 0)
+        // }
+        wall.setPosition(data.x1 + distX / 2 - 11, data.y1 + distY / 2 - 11, 0);
+
+        data.ID = wall.ID;
+        master.addEntity(wall);
+    }
+
+    lineCheck(cell) {
+
+        cell.activeLines = [];
+
+        let grid = this.grid;
+        let thisX = cell.i[0];
+        let thisY = cell.i[1];
 
         let above = thisY - 1;
         let below = thisY + 1;
@@ -48187,35 +48319,123 @@ class Cell {
         let right = thisX + 1;
 
         if (above >= 0 && grid[thisX][above].on === false && grid[thisX][above].tail === false) {
-            this.activeLines.push(this.lines[0]);
+            cell.activeLines.push(cell.lines[0]);
         }
         if (left >= 0 && grid[left][thisY].on === false && grid[left][thisY].tail === false) {
-            this.activeLines.push(this.lines[3]);
+            cell.activeLines.push(cell.lines[3]);
         }
         if (below < cols && grid[thisX][below].on === false && grid[thisX][below].tail === false) {
-            this.activeLines.push(this.lines[2]);
+            cell.activeLines.push(cell.lines[2]);
         }
         if (right < rows && grid[right][thisY].on === false && grid[right][thisY].tail === false) {
-            this.activeLines.push(this.lines[1]);
+            cell.activeLines.push(cell.lines[1]);
         }
     }
 
-    lineConsolidation(i) {
-        let thisX = this.i[0];
-        let thisY = this.i[1];
+    consolidateLines() {
 
-        let above = thisY - 1;
-        let below = thisY + 1;
-        let left = thisX - 1;
-        let right = thisX + 1;
+        let grid = this.grid;
+        let linesY = [];
+        let linesX = [];
+        let allLines = [];
+        let consolidatedLines = [];
 
-        this.activeLines.forEach(data => {
-            lines.push(data);
-        });
+        let y;
+        let x;
+        let smallestX;
+        let smallestY;
+        let lastItem;
+        let largestX;
+        let largestY;
+        let newLine;
+        let mult;
+
+        for (let j = 0; j < cols; j++) {
+            for (let i = 0; i < rows; i++) {
+                if (grid[i][j].activeLines.length > 0) {
+
+                    grid[i][j].activeLines.forEach(data => {
+                        allLines.push(data);
+                    });
+                }
+            }
+        }
+        for (let i = 0; i < allLines.length; i++) {
+            allLines[i].checked = false;
+        }
+
+        for (let i = 0; i < allLines.length; i++) {
+            let l1 = allLines[i];
+            if (l1.y1 === l1.y2) {
+                mult = 1;
+                for (let j = 0; j < allLines.length; j++) {
+                    let l2 = allLines[j];
+                    if (l1.y1 === l2.y1 && l1.y2 === l2.y2 && l2.checked === false && i !== j && l1.x1 === l2.x1 - w * mult) {
+                        linesY.push(l2);
+                        allLines[j].checked = true;
+                        mult++;
+                    }
+                }
+
+                if (linesY.length > 0) {
+                    y = l1.y1;
+                    smallestX = l1.x1;
+                    lastItem = linesY.length - 1;
+                    largestX = linesY[lastItem].x2;
+                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
+
+                    consolidatedLines.push(newLine);
+
+                    allLines[i].checked = true;
+                    linesY = [];
+                } else if (linesY.length === 0 && allLines[i].checked === false) {
+                    y = l1.y1;
+                    smallestX = l1.x1;
+                    largestX = l1.x2;
+                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
+
+                    consolidatedLines.push(newLine);
+                }
+            }
+
+            if (l1.x1 === l1.x2) {
+                mult = 1;
+                for (let j = 0; j < allLines.length; j++) {
+                    let l2 = allLines[j];
+                    if (l1.x1 === l2.x1 && l1.x2 === l2.x2 && l2.checked === false && i !== j && l1.y1 === l2.y1 - w * mult) {
+                        linesX.push(l2);
+                        allLines[j].checked = true;
+                        mult++;
+                    }
+                }
+
+                if (linesX.length > 0) {
+                    x = l1.x1;
+                    smallestY = l1.y1;
+                    lastItem = linesX.length - 1;
+                    largestY = linesX[lastItem].y2;
+                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
+
+                    consolidatedLines.push(newLine);
+
+                    allLines[i].checked = true;
+                    linesX = [];
+                } else if (linesX.length === 0 && allLines[i].checked === false) {
+                    x = l1.x1;
+                    smallestY = l1.y1;
+                    largestY = l1.y2;
+                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
+
+                    consolidatedLines.push(newLine);
+                }
+            }
+
+            allLines[i].checked = true;
+        }
+        return consolidatedLines;
     }
-
 }
-/* harmony export (immutable) */ __webpack_exports__["a"] = Cell;
+/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
 
 
 /***/ }),

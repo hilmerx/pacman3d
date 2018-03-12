@@ -8,20 +8,12 @@ import {Field} from './Field.js'
 
 
 
-export function loadScene(verts){
+export function loadScene(){
     //Init scene
 
 
     let master = new SceneManager(canvas1)
     master.camera.position.z = 1000
-    // master.camera.position.y = 200
-
-
-
-    // var axesHelper = new THREE.AxesHelper( 5 )
-    // master.scene.add( axesHelper )
-
-
     //Lights
     let light1 = {
         type: new THREE.AmbientLight( 0x888888),
@@ -35,10 +27,11 @@ export function loadScene(verts){
     }
     master.addLight(light2)
 
-    master.field = new Field()
+    master.field = new Field(master)
     master.addGrid(master.field.grid)
 
     master.tail = new Tail()
+    master.addGrid(master.tail.grid)
 
     let floor = new Box(new THREE.BoxGeometry( 400,  400, 20 ), new THREE.MeshBasicMaterial( {color: 0x333333} ))
     floor.setPosition(200-10, 200-10, -20)
@@ -49,13 +42,8 @@ export function loadScene(verts){
     pacman.listenTo(window)
     master.addEntity(pacman)
 
-    let green = new Bouncer()
-    // green.setPosition(80, 80, -2)
+    let green = new Bouncer(master)
     master.addEntity(green)
-
-    let red = new Eater()
-    // red.setPosition(120, 80, 2)
-    master.addEntity(red)
 
     return master
 }

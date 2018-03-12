@@ -1,17 +1,17 @@
 import * as THREE from 'three'
 import InnerMonster from './InnerMonster'
-import Vec3 from './Vec3'
+import {Vec3} from './Math'
 
 
 
 export class Bouncer extends InnerMonster{
-    constructor(id) {
+    constructor() {
         super()
 
         this.location = new Vec3(80, 80, -2)
-
+        this.type = 'bouncer'
         this.d = 16
-        this.r = 8
+        this.r = 10
         this.mass = 10
         this.angleArr = [-90, -180]
         this.angleArr = [0, -180]
@@ -27,35 +27,33 @@ export class Bouncer extends InnerMonster{
         this.material = new THREE.MeshBasicMaterial( {color: 0x22ff00} )
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.ID = this.mesh.uuid
-        this.setPosition(this.location.x, this.location.y, this.location.z)
-
-        console.log(this.location);
+        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
     }
 
     setPosition(x, y = 0, z) {
         this.mesh.position.set(x, y, z)
     }
 
-    update() {
-        // this.collideWithRoute()
-        // this.collideWithBorder()
+    update(master) {
+        this.collideWithTail(master)
+        this.collideWithBorder(master.field.consolidatedLines)
         // if (gameActive) {
-            this.walk()
-            this.setPosition(this.location.x, this.location.y, this.location.z)
+        this.walk()
+        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
         // this.collideWithPacman()
     }
 
 
-    collideWithBorder(){
-        collidingLines =this.lineCollideCheck()
-        collidingLineEnd =this.lineEndCollideCheck()
+    collideWithBorder(lines){
+        let collidingLines = this.lineCollideCheck(lines)
+        let collidingLineEnd = this.lineEndCollideCheck(lines)
         if (collidingLines.length > 0) {
             collidingLines.forEach((line) => {
                 this.bounce(line)
             })
             return
         } else if (collidingLineEnd) {
-                this.endPointBounce(collidingLineEnd)
+            this.endPointBounce(collidingLineEnd)
         } else {
             //DO NOTHING
         }
@@ -68,6 +66,7 @@ export class Eater extends InnerMonster{
         super()
 
         this.location = new Vec3(28 + (id * 50) * 2, 200 - (id * 8), 2)
+        this.type = 'eater'
 
         this.d = 16
         this.r = 8
