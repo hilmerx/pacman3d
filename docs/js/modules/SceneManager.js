@@ -5,7 +5,7 @@ export default class SceneManager {
     constructor(){
 
         this.scene = new THREE.Scene()
-        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth/(window.innerHeight-5), 0.1, 3000)
+        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth/(window.innerHeight-5   ), 0.1, 3000)
 
         this.controls = new THREE.OrbitControls( this.camera )
         this.controls.enableKeys = false
@@ -54,7 +54,7 @@ export default class SceneManager {
         if (entity.mesh){
             this.addEntitytoMesh(entity)
         }
-        if (entity.type === 'bouncer') {
+        if (entity.type === 'bouncer' || entity.type === 'eater') {
             this.enemies.push(entity)
         }
 
@@ -73,6 +73,18 @@ export default class SceneManager {
         // this.controls.update()
         this.updateEntities()
         this.renderer.render(this.scene, this.camera)
+        let enemies = this.enemies
+        let currentEnemy
+        for (let i = 0; i<enemies.length; i++){
+            currentEnemy = enemies[i]
+            currentEnemy.collideWithMonster(enemies)
+        }
+
+        for (let i = 0; i<enemies.length; i++){
+            currentEnemy = enemies[i]
+            currentEnemy.setPostCollSpeedAngle(enemies)
+        }
+
     }
 
     die(){

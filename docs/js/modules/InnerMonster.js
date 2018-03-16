@@ -1,6 +1,6 @@
-import {Vec2, dist} from './Math.js'
+import {dist} from './Math.js'
 
-let w = 20;
+let w = 20
 
 export default class InnerMonster{
 
@@ -8,6 +8,8 @@ export default class InnerMonster{
         this.location.y -= Math.sin(this.angle)*this.speed
         this.location.x += Math.cos(this.angle)*this.speed
         this.speed = this.origSpeed
+        this.collMonster = false
+
     }
 
     collideWithTail(master){
@@ -24,9 +26,10 @@ export default class InnerMonster{
         }
     }
 
-    collideWithPacman(){
+    collideWithPacman(master){
+        let pacman = master.pacman[0]
         if (dist(pacman.aniX, pacman.aniY, this.location.x, this.location.y)<(pacman.r+this.r) && pacman.flying) {
-            die()
+            master.die()
         }
     }
 
@@ -39,31 +42,29 @@ export default class InnerMonster{
         }
     }
 
-    collideWithMonster() {
+    collideWithMonster(monsters) {
         for (let i = 0; i<monsters.length; i++){
-            for (let j = 0; j<monsters[i].length; j++){
-                let monster = monsters[i][j]
-                if(dist(this.location.x, this.location.y, monster.location.x, monster.location.y)<(this.r+monster.r) && monster.id+1 !== this.id+1){
-                    let second = monster
-                    thisSpeedX = Math.cos(this.angle)*this.speed
-                    thisSpeedY = Math.sin(this.angle)*this.speed
-                    secondSpeedX = Math.cos(second.angle)*second.speed
-                    secondSpeedY = Math.sin(second.angle)*second.speed
+            let monster = monsters[i]
+            if(dist(this.location.x, this.location.y, monster.location.x, monster.location.y)<(this.r-1.5+monster.r-1.5) && monster.ID !== this.ID){
+                let second = monster
+                let thisSpeedX = Math.cos(this.angle)*this.speed
+                let thisSpeedY = Math.sin(this.angle)*this.speed
+                let secondSpeedX = Math.cos(second.angle)*second.speed
+                let secondSpeedY = Math.sin(second.angle)*second.speed
 
-                    collisionPointX = ((this.x * second.r) + (second.x * this.r)) / (this.r + second.r);
-                    collisionPointY = ((this.y * second.r) + (second.y * this.r)) / (firstBall.r + second.r);
+                let collisionPointX = ((this.x * second.r) + (second.x * this.r)) / (this.r + second.r);
+                let collisionPointY = ((this.y * second.r) + (second.y * this.r)) / (this.r + second.r);
 
-                    thisNewX = (thisSpeedX * (this.mass - second.mass) + (2 * second.mass * secondSpeedX)) / (this.mass + second.mass)
-                    thisNewY = (thisSpeedY * (this.mass - second.mass) + (2 * second.mass * secondSpeedY)) / (this.mass + second.mass)
-                    secondNewX = (secondSpeedX * (second.mass - this.mass) + (2 * this.mass * thisSpeedX)) / (this.mass + second.mass)
-                    secondNewY = (secondSpeedY * (second.mass - this.mass) + (2 * this.mass * thisSpeedY)) / (this.mass + second.mass)
+                let thisNewX = (thisSpeedX * (this.mass - second.mass) + (2 * second.mass * secondSpeedX)) / (this.mass + second.mass)
+                let thisNewY = (thisSpeedY * (this.mass - second.mass) + (2 * second.mass * secondSpeedY)) / (this.mass + second.mass)
+                let secondNewX = (secondSpeedX * (second.mass - this.mass) + (2 * this.mass * thisSpeedX)) / (this.mass + second.mass)
+                let secondNewY = (secondSpeedY * (second.mass - this.mass) + (2 * this.mass * thisSpeedY)) / (this.mass + second.mass)
 
-                    this.collMonster = true
-                    this.angleTemp = atan2(thisNewY, thisNewX)
-                    this.speedTemp = dist(0,0,thisNewX,thisNewY)
+                this.collMonster = true
+                this.angleTemp = Math.atan2(thisNewY, thisNewX)
+                this.speedTemp = dist(0,0,thisNewX,thisNewY)
 
-                    return
-                }
+                return
             }
         }
     }
@@ -71,7 +72,6 @@ export default class InnerMonster{
     bounce(line) {
         let lineSlope = (line.y2-line.y1)/(line.x2-line.x1)
         let linePerpSlope = -1/lineSlope
-        let linePerpVector = new Vec2(1,linePerpSlope)
 
         let thisAngleDeg = this.angle* (180 / Math.PI);
         let linePerpRad = Math.atan(linePerpSlope, 1)
@@ -119,7 +119,7 @@ export default class InnerMonster{
         let dx=distX-w/2
         let dy=distY-w/2
 
-        return (dx*dx+dy*dy<=(this.r*this.r));
+        return (dx*dx+dy*dy<=(this.r*this.r))
     }
 
 

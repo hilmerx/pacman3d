@@ -41,6 +41,12 @@ export class Pac {
     setPosition(x, y, z = 0) {
         this.mesh.position.set(x, y, z)
     }
+    setStartPosition(x, y, dir = 'right', z = 20) {
+        this.mesh.position.set(x, y, z)
+        this.x = x
+        this.y = y
+        this.direction = dir
+    }
 
     update(master, tail){
 
@@ -207,6 +213,8 @@ export class Pac {
                     grid[i][j].tail = true
                     tail.arr.push(new TailCell(i,j))
                     tail.manUpdate()
+                    master.field.initLineChecks(master)
+
                 }
             }
         }

@@ -38,12 +38,17 @@ export function loadScene(){
     master.addEntity(floor)
 
     let pacman = new Pac()
-    pacman.setPosition(0, 0, 20)
+    pacman.setStartPosition(0, 40)
     pacman.listenTo(window)
     master.addEntity(pacman)
 
     let green = new Bouncer(master)
+    green.setPosition(80, 80, -2)
     master.addEntity(green)
+
+    let red = new Eater()
+    red.setPosition(120, 80, 2)
+    master.addEntity(red)
 
     return master
 }

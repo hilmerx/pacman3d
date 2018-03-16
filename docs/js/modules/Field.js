@@ -119,7 +119,6 @@ export class Field{
                 }
             }
         }
-        console.log("hej")
     }
 
     checkFlood(tail, monsters) {
@@ -231,7 +230,7 @@ export class Field{
         // if (data.pos === 'left' || data.pos === 'right'){
         //     wall.setPosition(data.x1 -10, data.y1+ 180-10, 0)
         // }
-            wall.setPosition(data.x1 + distX/2 -11, data.y1+ distY/2 -11, 0)
+        wall.setPosition(data.x1 + distX/2 -11, data.y1+ distY/2 -11, 0)
 
         data.ID = wall.ID
         master.addEntity(wall)

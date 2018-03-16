@@ -46010,8 +46010,8 @@ function LensFlare() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = dist;
-/* harmony export (immutable) */ __webpack_exports__["d"] = new2DArray;
+/* harmony export (immutable) */ __webpack_exports__["b"] = dist;
+/* harmony export (immutable) */ __webpack_exports__["c"] = new2DArray;
 function dist(x1, y1, x2, y2) {
     return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
@@ -46031,7 +46031,7 @@ class Vec3 {
         this.z = z;
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["b"] = Vec3;
+/* harmony export (immutable) */ __webpack_exports__["a"] = Vec3;
 
 
 class Vec2 {
@@ -46045,7 +46045,7 @@ class Vec2 {
         this.y = y;
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["a"] = Vec2;
+/* unused harmony export Vec2 */
 
 
 function new2DArray(rows, cols) {
@@ -46118,7 +46118,7 @@ class Tail {
         this.arr = [];
         this.waveInitArr = [];
         this.waveModulo = 0;
-        this.grid = Object(__WEBPACK_IMPORTED_MODULE_2__Math_js__["d" /* new2DArray */])(20, 20);
+        this.grid = Object(__WEBPACK_IMPORTED_MODULE_2__Math_js__["c" /* new2DArray */])(20, 20);
         this.grid = this.loadBoxes(this.grid);
     }
 
@@ -46328,12 +46328,17 @@ function loadScene() {
     master.addEntity(floor);
 
     let pacman = new __WEBPACK_IMPORTED_MODULE_3__Pac_js__["a" /* Pac */]();
-    pacman.setPosition(0, 0, 20);
+    pacman.setStartPosition(0, 40);
     pacman.listenTo(window);
     master.addEntity(pacman);
 
     let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Bouncer */](master);
+    green.setPosition(80, 80, -2);
     master.addEntity(green);
+
+    let red = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["b" /* Eater */]();
+    red.setPosition(120, 80, 2);
+    master.addEntity(red);
 
     return master;
 }
@@ -46400,7 +46405,7 @@ class SceneManager {
         if (entity.mesh) {
             this.addEntitytoMesh(entity);
         }
-        if (entity.type === 'bouncer') {
+        if (entity.type === 'bouncer' || entity.type === 'eater') {
             this.enemies.push(entity);
         }
 
@@ -46419,6 +46424,17 @@ class SceneManager {
         // this.controls.update()
         this.updateEntities();
         this.renderer.render(this.scene, this.camera);
+        let enemies = this.enemies;
+        let currentEnemy;
+        for (let i = 0; i < enemies.length; i++) {
+            currentEnemy = enemies[i];
+            currentEnemy.collideWithMonster(enemies);
+        }
+
+        for (let i = 0; i < enemies.length; i++) {
+            currentEnemy = enemies[i];
+            currentEnemy.setPostCollSpeedAngle(enemies);
+        }
     }
 
     die() {
@@ -47530,6 +47546,12 @@ class Pac {
     setPosition(x, y, z = 0) {
         this.mesh.position.set(x, y, z);
     }
+    setStartPosition(x, y, dir = 'right', z = 20) {
+        this.mesh.position.set(x, y, z);
+        this.x = x;
+        this.y = y;
+        this.direction = dir;
+    }
 
     update(master, tail) {
 
@@ -47676,6 +47698,7 @@ class Pac {
                     grid[i][j].tail = true;
                     tail.arr.push(new __WEBPACK_IMPORTED_MODULE_1__Tail_js__["b" /* TailCell */](i, j));
                     tail.manUpdate();
+                    master.field.initLineChecks(master);
                 }
             }
         }
@@ -47727,7 +47750,7 @@ class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default
     constructor() {
         super();
 
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["b" /* Vec3 */](80, 80, -2);
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](80, 80, -2);
         this.type = 'bouncer';
         this.d = 16;
         this.r = 10;
@@ -47735,7 +47758,8 @@ class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default
         this.angleArr = [-90, -180];
         this.angleArr = [0, -180];
         // this.angle = (180 - 45) * Math.random(1) * (Math.PI / 180);
-        this.angle = 270 * Math.random(1) * (Math.PI / 180);
+        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
+        this.angle = 270 * (Math.PI / 180);
 
         this.origSpeed = 2;
         this.speed = this.origSpeed;
@@ -47759,12 +47783,14 @@ class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default
         // if (gameActive) {
         this.walk();
         this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
-        // this.collideWithPacman()
+        this.collideWithPacman(master);
     }
 
     collideWithBorder(lines) {
         let collidingLines = this.lineCollideCheck(lines);
         let collidingLineEnd = this.lineEndCollideCheck(lines);
+        this.type = 'eater';
+
         if (collidingLines.length > 0) {
             collidingLines.forEach(line => {
                 this.bounce(line);
@@ -47781,56 +47807,76 @@ class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default
 
 
 class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
-    constructor(id) {
+    constructor() {
         super();
 
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["b" /* Vec3 */](28 + id * 50 * 2, 200 - id * 8, 2);
+        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](80, 150, -2);
         this.type = 'eater';
 
         this.d = 16;
-        this.r = 8;
+        this.r = 10;
         this.mass = 10;
         this.angleArr = [-90, -180];
         this.angleArr = [0, -180];
-        this.angle = 180 * (Math.PI / 180);
+        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
+        this.angle = 271 + 180 * (Math.PI / 180);
 
-        this.origSpeed = 2;
+        this.origSpeed = 1.5;
         this.speed = this.origSpeed;
         this.speedTemp = this.speed;
         this.angleTemp = this.angle;
 
         this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xff0000 });
         this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
         this.ID = this.mesh.uuid;
+
+        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
     }
 
-    update() {}
+    setPosition(x, y = 0, z) {
+        this.mesh.position.set(x, y, z);
+    }
 
-    collideWithBorder() {
-        collidingLines = this.lineCollideCheck /**/();
-        collidingLineEnd = this.lineEndCollideCheck();
+    update(master) {
+        this.collideWithTail(master);
+        this.collideWithBorder(master.field.consolidatedLines, master);
+        // if (gameActive) {
+        this.walk();
+        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
+        this.collideWithPacman(master);
+    }
+
+    collideWithBorder(lines, master) {
+        let collidingLines = this.lineCollideCheck(lines);
+        let collidingLineEnd = this.lineEndCollideCheck(lines);
         if (collidingLines.length > 0) {
             collidingLines.forEach(line => {
                 this.bounce(line);
-                this.eatCell();
+                this.eatCell(master);
             });
             return;
         } else if (collidingLineEnd) {
             this.endPointBounce(collidingLineEnd);
-            this.eatCell();
+            this.eatCell(master);
         } else {
             //DO NOTHING
         }
     }
 
-    eatCell() {
+    eatCell(master) {
+        let grid = master.field.grid;
+
+        let pacman = master.pacman[0];
+        let field = master.field;
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
-                if (this.squareCollide(i, j) && grid[i][j].onPermanent === false) {
+                if (this.squareCollide(i, j, grid) && grid[i][j].onPermanent === false && grid[i][j].on) {
                     grid[i][j].on = false;
-                    initLineChecks();
-                    if (grid[i][j].x2 === pacman.x && grid[i][j].y2 === pacman.y) {
+                    grid[i][j].mesh.mesh.visible = false;
+                    grid[i][j].activeLines = [];
+                    field.initLineChecks(master);
+                    if (grid[i][j].x2 === pacman.mesh.position.x && grid[i][j].y2 === pacman.mesh.position.y) {
                         pacman.direction = pacman.lastDirection;
                         pacman.flying = true;
                     }
@@ -47839,7 +47885,7 @@ class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default *
         }
     }
 }
-/* unused harmony export Eater */
+/* harmony export (immutable) */ __webpack_exports__["b"] = Eater;
 
 
 /***/ }),
@@ -47858,6 +47904,7 @@ class InnerMonster {
         this.location.y -= Math.sin(this.angle) * this.speed;
         this.location.x += Math.cos(this.angle) * this.speed;
         this.speed = this.origSpeed;
+        this.collMonster = false;
     }
 
     collideWithTail(master) {
@@ -47874,9 +47921,10 @@ class InnerMonster {
         }
     }
 
-    collideWithPacman() {
-        if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
-            die();
+    collideWithPacman(master) {
+        let pacman = master.pacman[0];
+        if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
+            master.die();
         }
     }
 
@@ -47888,31 +47936,29 @@ class InnerMonster {
         }
     }
 
-    collideWithMonster() {
+    collideWithMonster(monsters) {
         for (let i = 0; i < monsters.length; i++) {
-            for (let j = 0; j < monsters[i].length; j++) {
-                let monster = monsters[i][j];
-                if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r + monster.r && monster.id + 1 !== this.id + 1) {
-                    let second = monster;
-                    thisSpeedX = Math.cos(this.angle) * this.speed;
-                    thisSpeedY = Math.sin(this.angle) * this.speed;
-                    secondSpeedX = Math.cos(second.angle) * second.speed;
-                    secondSpeedY = Math.sin(second.angle) * second.speed;
+            let monster = monsters[i];
+            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r - 1.5 + monster.r - 1.5 && monster.ID !== this.ID) {
+                let second = monster;
+                let thisSpeedX = Math.cos(this.angle) * this.speed;
+                let thisSpeedY = Math.sin(this.angle) * this.speed;
+                let secondSpeedX = Math.cos(second.angle) * second.speed;
+                let secondSpeedY = Math.sin(second.angle) * second.speed;
 
-                    collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
-                    collisionPointY = (this.y * second.r + second.y * this.r) / (firstBall.r + second.r);
+                let collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
+                let collisionPointY = (this.y * second.r + second.y * this.r) / (this.r + second.r);
 
-                    thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
-                    thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
-                    secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
-                    secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
+                let thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
+                let thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
+                let secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
+                let secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
 
-                    this.collMonster = true;
-                    this.angleTemp = atan2(thisNewY, thisNewX);
-                    this.speedTemp = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(0, 0, thisNewX, thisNewY);
+                this.collMonster = true;
+                this.angleTemp = Math.atan2(thisNewY, thisNewX);
+                this.speedTemp = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(0, 0, thisNewX, thisNewY);
 
-                    return;
-                }
+                return;
             }
         }
     }
@@ -47920,7 +47966,6 @@ class InnerMonster {
     bounce(line) {
         let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
         let linePerpSlope = -1 / lineSlope;
-        let linePerpVector = new __WEBPACK_IMPORTED_MODULE_0__Math_js__["a" /* Vec2 */](1, linePerpSlope);
 
         let thisAngleDeg = this.angle * (180 / Math.PI);
         let linePerpRad = Math.atan(linePerpSlope, 1);
@@ -47983,13 +48028,13 @@ class InnerMonster {
         for (let i = 0; i < lines.length; i++) {
             let l = lines[i];
 
-            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(l.x1, l.y1, this.location.x, this.location.y) < Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(l.x2, l.y2, this.location.x, this.location.y)) {
+            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x1, l.y1, this.location.x, this.location.y) < Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x2, l.y2, this.location.x, this.location.y)) {
                 point = { x: l.x1, y: l.y1 };
             } else {
                 point = { x: l.x2, y: l.y2 };
             }
 
-            endPointCollides = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, point.x, point.y) < this.r;
+            endPointCollides = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, point.x, point.y) < this.r;
 
             if (endPointCollides) {
                 return point;
@@ -48053,7 +48098,7 @@ class InnerMonster {
 
             withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
 
-            isOnInfLine = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["c" /* dist */])(this.location.x, this.location.y, newX, newY) < this.r;
+            isOnInfLine = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, newX, newY) < this.r;
 
             if (isOnInfLine && withinBoundries) {
                 linesToReturn.push(l);
@@ -48088,7 +48133,7 @@ let rows = 20;
 
 class Field {
     constructor(master) {
-        this.grid = Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["d" /* new2DArray */])(20, 20);
+        this.grid = Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["c" /* new2DArray */])(20, 20);
         this.grid = this.loadBoxes(this.grid);
 
         this.getFlood = [];
@@ -48179,7 +48224,7 @@ class Field {
                 currentCell = this.grid[currentX][currentY];
 
                 for (let iii = 0; iii < enemies.length; iii++) {
-                    if (Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["c" /* dist */])(currentCell.x, currentCell.y, enemies[iii].location.x, enemies[iii].location.y) < w) {
+                    if (Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["b" /* dist */])(currentCell.x, currentCell.y, enemies[iii].location.x, enemies[iii].location.y) < w) {
                         foundMoster = true;
                     }
                 }
@@ -48196,7 +48241,6 @@ class Field {
                 }
             }
         }
-        console.log("hej");
     }
 
     checkFlood(tail, monsters) {
