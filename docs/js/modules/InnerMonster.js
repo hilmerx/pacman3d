@@ -5,8 +5,8 @@ let w = 20
 export default class InnerMonster{
 
     walk(){
-        this.location.y -= Math.sin(this.angle)*this.speed
-        this.location.x += Math.cos(this.angle)*this.speed
+        this.position.y -= Math.sin(this.angle)*this.speed
+        this.position.x += Math.cos(this.angle)*this.speed
         this.speed = this.origSpeed
         this.collMonster = false
 
@@ -18,8 +18,8 @@ export default class InnerMonster{
             for (let i = 0; i<tail.grid.length; i++){
                 for (let j = 0; j<tail.grid[i].length; j++){
                     if( tail.grid[i][j].mesh.mesh.visible === true && this.squareCollide(i, j, tail.grid)){
-                        // tail.waveInit(i,j)
-                        master.die()
+                        tail.waveInit(i,j)
+                        // master.die()
                     }
                 }
             }
@@ -28,7 +28,7 @@ export default class InnerMonster{
 
     collideWithPacman(master){
         let pacman = master.pacman[0]
-        if (dist(pacman.aniX, pacman.aniY, this.location.x, this.location.y)<(pacman.r+this.r) && pacman.flying) {
+        if (dist(pacman.aniX, pacman.aniY, this.position.x, this.position.y)<(pacman.r+this.r) && pacman.flying) {
             master.die()
         }
     }
@@ -45,7 +45,7 @@ export default class InnerMonster{
     collideWithMonster(monsters) {
         for (let i = 0; i<monsters.length; i++){
             let monster = monsters[i]
-            if(dist(this.location.x, this.location.y, monster.location.x, monster.location.y)<(this.r-1.5+monster.r-1.5) && monster.ID !== this.ID){
+            if(dist(this.position.x, this.position.y, monster.position.x, monster.position.y)<(this.r-1.5+monster.r-1.5) && monster.ID !== this.ID){
                 let second = monster
                 let thisSpeedX = Math.cos(this.angle)*this.speed
                 let thisSpeedY = Math.sin(this.angle)*this.speed
@@ -87,7 +87,7 @@ export default class InnerMonster{
     endPointBounce(point) {
         let p = point
         let pc = {x: p.x, y: p.y, r: this.r}
-        let dot = {x: this.location.x, y:this.location.y, angle: this.angle* (180 / Math.PI)}
+        let dot = {x: this.position.x, y:this.position.y, angle: this.angle* (180 / Math.PI)}
 
         let diffY = dot.y-pc.y
         let diffX = dot.x-pc.x
@@ -103,8 +103,8 @@ export default class InnerMonster{
 
     squareCollide(i,j, grid){
 
-        let distX = Math.abs(this.location.x - grid[i][j].x-w/2)
-        let distY = Math.abs(this.location.y - grid[i][j].y-w/2)
+        let distX = Math.abs(this.position.x - grid[i][j].x-w/2)
+        let distY = Math.abs(this.position.y - grid[i][j].y-w/2)
 
         if (distX > (w/2 + this.r)) { return false }
         if (distY > (w/2 + this.r)) { return false }
@@ -131,13 +131,13 @@ export default class InnerMonster{
         for (let i = 0; i < lines.length; i++){
             let l = lines[i]
 
-            if (dist(l.x1,l.y1, this.location.x,this.location.y) < dist(l.x2,l.y2, this.location.x,this.location.y)){
+            if (dist(l.x1,l.y1, this.position.x,this.position.y) < dist(l.x2,l.y2, this.position.x,this.position.y)){
                 point = {x:l.x1, y: l.y1}
             } else {
                 point = {x:l.x2, y: l.y2}
             }
 
-            endPointCollides = dist(this.location.x, this.location.y, point.x, point.y)<this.r
+            endPointCollides = dist(this.position.x, this.position.y, point.x, point.y)<this.r
 
             if (endPointCollides) {
                 return point
@@ -165,7 +165,6 @@ export default class InnerMonster{
 
         for (let i = 0; i < lines.length; i++){
             let l = lines[i]
-            
 
             if (l.x1 === l.x2){
                 lineSlope = 0
@@ -182,15 +181,15 @@ export default class InnerMonster{
 
 
             lineOff = l.y1-l.x1*lineSlope
-            objOff = (this.location.y-this.location.x*objSlope)
+            objOff = (this.position.y-this.position.x*objSlope)
 
             if (l.x1 == l.x2){
                 newX = l.x1
-                newY = this.location.y
+                newY = this.position.y
 
             } else if (l.y1 == l.y2) {
                 newY = l.y1
-                newX = this.location.x
+                newX = this.position.x
 
             } else {
                 newX = (objOff-lineOff) / (lineSlope-objSlope)
@@ -198,15 +197,15 @@ export default class InnerMonster{
             }
 
             v = {x: l.x2-l.x1, y: l.y2-l.y1 }
-            m = {x: this.location.x-l.x1, y: this.location.y-l.y1}
-            m2 = {x: this.location.x-l.x2, y: this.location.y-l.y2}
+            m = {x: this.position.x-l.x1, y: this.position.y-l.y1}
+            m2 = {x: this.position.x-l.x2, y: this.position.y-l.y2}
 
             dotProduct1 = v.x*m.x+v.y*m.y
             dotProduct2 = v.x*m2.x+v.y*m2.y
 
             withinBoundries = (dotProduct1>0 && dotProduct2<0)
 
-            isOnInfLine = dist(this.location.x, this.location.y, newX, newY)< this.r
+            isOnInfLine = dist(this.position.x, this.position.y, newX, newY)< this.r
 
             if (isOnInfLine && withinBoundries){
                 linesToReturn.push(l)

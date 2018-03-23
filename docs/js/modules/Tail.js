@@ -7,6 +7,7 @@ let w = 20
 
 export class Tail {
     constructor(master){
+        this.type = 'tail'
         this.arr = []
         this.waveInitArr = []
         this.waveModulo = 0
@@ -14,14 +15,24 @@ export class Tail {
         this.grid = this.loadBoxes(this.grid)
     }
 
-    manUpdate(){
+
+
+    update(master){
         this.arr.forEach(tile=>{
             let x = tile.x
             let y = tile.y
-
             this.grid[x][y].mesh.mesh.visible = true
+            if (tile.wave) {
+                let opacity = this.grid[x][y].mesh.mesh.material.opacity
+
+                let HSL = this.grid[x][y].mesh.mesh.material.color.getHSL()
+                HSL.h += 0.02
+                this.grid[x][y].mesh.mesh.material.color.setHSL(HSL.h, 0.5, 0.6)
+                this.grid[x][y].mesh.mesh.material.opacity +=  0.2
+            }
         })
 
+        return this.wave(master)
     }
 
     hideTail(){
@@ -30,6 +41,8 @@ export class Tail {
         for (let i = 0; i<grid.length; i++){
             for (let j = 0; j<grid[i].length; j++){
                 this.grid[i][j].mesh.mesh.visible = false
+                this.grid[i][j].mesh.mesh.material.color.setHex(0xff99ff)
+
             }
         }
     }    
@@ -57,27 +70,8 @@ export class Tail {
         return grid
     }
 
-    makeTail(master){
-        this.arr.forEach((data) => {
-            if (data.wave) {
-                // noStroke()
-                // fill(200,0,150)
-            } else {
-                let size = 20
-                let geometry = new THREE.BoxGeometry( size,  size, size )
-                let material = new THREE.MeshBasicMaterial( {color: 0x0000ff} )
-
-                let tailBuff = new Box(geometry, material)
-                tailBuff.setPosition(data.x* w, data.y* w, 20, 20)
-                master.addEntity(tailBuff)
-
-            }
-            // rect(data.x*w, data.y*w, 20, 20)
-        })
-    }
-
-
     waveInit(x,y) {
+
         this.arr.forEach((data, nr)=>{
             if (data.x === x && data.y === y && data.wave === false) {
                 this.waveInitArr.push([nr, nr])
@@ -86,7 +80,7 @@ export class Tail {
         })
     }
 
-    wave(){
+    wave(master){
         if (this.waveInitArr.length>0 && this.waveModulo % 2===0){
             this.waveInitArr.forEach( (initSpot)=>{
                 let minus = initSpot[0]--
@@ -98,7 +92,7 @@ export class Tail {
                 if (plus<this.arr.length && this.waveInitArr.length>0){
                     this.arr[plus].wave = true
                 } else {
-                    die()
+                    master.die()
                 }
             })
         }

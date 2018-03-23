@@ -5,19 +5,18 @@ import {Vec3} from './Math'
 
 
 export class Bouncer extends InnerMonster{
-    constructor() {
+    constructor(x, y) {
         super()
-
-        this.location = new Vec3(80, 80, -2)
+        this.r = 10
+        this.position = new Vec3(x, y, -2)
         this.type = 'bouncer'
         this.d = 16
-        this.r = 10
         this.mass = 10
         this.angleArr = [-90, -180]
         this.angleArr = [0, -180]
         // this.angle = (180 - 45) * Math.random(1) * (Math.PI / 180);
-        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
-        this.angle = 270 * (Math.PI / 180);
+        this.angle = 360 *Math.random(1)* (Math.PI / 180);
+        // this.angle = 90 * (Math.PI / 180);
 
         this.origSpeed = 2
         this.speed = this.origSpeed
@@ -28,19 +27,23 @@ export class Bouncer extends InnerMonster{
         this.material = new THREE.MeshBasicMaterial( {color: 0x22ff00} )
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.ID = this.mesh.uuid
-        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
+        this.setPosition(this.position.x, this.position.y, this.position.z)
     }
 
-    setPosition(x, y = 0, z) {
+    setPosition(x, y , z = -2) {
         this.mesh.position.set(x, y, z)
+    }
+
+    setStartPosition(x, y, z = -2) {
+        this.position.x = x + 10
+        this.position.y = y + 10
     }
 
     update(master) {
         this.collideWithTail(master)
         this.collideWithBorder(master.field.consolidatedLines)
-        // if (gameActive) {
         this.walk()
-        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
+        this.setPosition(this.position.x-10, this.position.y-10, this.position.z)
         this.collideWithPacman(master)
     }
 
@@ -68,7 +71,7 @@ export class Eater extends InnerMonster{
     constructor() {
         super()
 
-        this.location = new Vec3(80, 150, -2)
+        this.position = new Vec3(80, 150, -2)
         this.type = 'eater'
 
         this.d = 16
@@ -76,8 +79,8 @@ export class Eater extends InnerMonster{
         this.mass = 10
         this.angleArr = [-90, -180]
         this.angleArr = [0, -180]
-        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
-        this.angle = 271+180 * (Math.PI / 180);
+        this.angle = 360 *Math.random(1)* (Math.PI / 180);
+        // this.angle = 271+180 * (Math.PI / 180);
 
         this.origSpeed = 1.5
         this.speed = this.origSpeed
@@ -89,7 +92,7 @@ export class Eater extends InnerMonster{
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.ID = this.mesh.uuid
 
-        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
+        // this.setPosition(this.position.x-10, this.position.y-10, this.position.z)
 
     }
 
@@ -97,12 +100,18 @@ export class Eater extends InnerMonster{
         this.mesh.position.set(x, y, z)
     }
 
+    setStartPosition(x, y, z = 2) {
+        this.position.x = x + 10
+        this.position.y = y + 10
+    }
+
+
     update(master) {
         this.collideWithTail(master)
         this.collideWithBorder(master.field.consolidatedLines, master)
         // if (gameActive) {
         this.walk()
-        this.setPosition(this.location.x-10, this.location.y-10, this.location.z)
+        this.setPosition(this.position.x-10, this.position.y-10, this.position.z)
         this.collideWithPacman(master)
     }
 
@@ -135,8 +144,9 @@ export class Eater extends InnerMonster{
                     grid[i][j].on = false
                     grid[i][j].mesh.mesh.visible = false
                     grid[i][j].activeLines = []
+                    master.countScore()
                     field.initLineChecks(master)
-                    if (grid[i][j].x2 === pacman.mesh.position.x && grid[i][j].y2 === pacman.mesh.position.y) {
+                    if (grid[i][j].x2 - 10 === pacman.mesh.position.x && grid[i][j].y2 - 10 === pacman.mesh.position.y) {
                         pacman.direction = pacman.lastDirection
                         pacman.flying = true
                     }

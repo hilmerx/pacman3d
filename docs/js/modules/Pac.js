@@ -16,7 +16,6 @@ export class Pac {
         this.x = this.mesh.position.x
         this.y = this.mesh.position.y
 
-
         this.ID = this.mesh.uuid
         this.visible = this.mesh.visible
         this.solid = false
@@ -40,12 +39,13 @@ export class Pac {
 
     setPosition(x, y, z = 0) {
         this.mesh.position.set(x, y, z)
+
     }
     setStartPosition(x, y, dir = 'right', z = 20) {
         this.mesh.position.set(x, y, z)
         this.x = x
         this.y = y
-        this.direction = dir
+        // this.direction = dir
     }
 
     update(master, tail){
@@ -212,7 +212,6 @@ export class Pac {
                 if(this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true){
                     grid[i][j].tail = true
                     tail.arr.push(new TailCell(i,j))
-                    tail.manUpdate()
                     master.field.initLineChecks(master)
 
                 }
@@ -225,8 +224,8 @@ export class Pac {
                     for (let k = 0; k<tail.arr.length;k++){
                         grid[tail.arr[k].x][tail.arr[k].y].mesh.mesh.visible = true
                         grid[tail.arr[k].x][tail.arr[k].y].on = true
+                        grid[tail.arr[k].x][tail.arr[k].y].tail = false
                     }
-
 
                     field.checkFlood(tail, master.enemies)
                     tail.arr = []
@@ -235,6 +234,7 @@ export class Pac {
                     field.emptyRoute()
                     field.initLineChecks(master)
                     this.flying = false
+                    master.countScore()
 
                     this.direction = ''
                 }
@@ -243,8 +243,8 @@ export class Pac {
 
 
         for (let i = 0; i < tail.arr.length - 1;i++){
-            if (tail.arr[i].x === (this.x-w/2) /w && tail.arr[i].y === (this.y-w/2) /w){
-                die()
+            if (tail.arr[i].x === (this.x) /w && tail.arr[i].y === (this.y) /w){
+                master.die()
             }
         }
     }

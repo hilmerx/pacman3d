@@ -7,11 +7,33 @@
                 padding: 0;
             }
 
+            #info {
+                position: fixed;
+                top: 90px;
+                width: 100%;
+                /*text-align: center;*/
+                left: 120px;
+                z-index: 100;
+                display:block;
+                font-size: 4em;
+                font-family: Retro Computer;
+                color: #0000ff;
+            }
+
+            #info div {
+                margin: 0 0 0.5em 0;
+                padding: 0;
+            }
+
         </style>
 
     </head>
     <body>
         <canvas id="canvas1" width="1024" height="1024"></canvas>
         <script type="text/javascript" src="temp/js/App.js"></script>
+        <div id="info">
+            <div>Level 1</div>
+            <div><span id="score">0</span>%</div>
+        </div>
     </body>
 </html>

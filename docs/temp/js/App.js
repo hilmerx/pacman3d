@@ -46115,6 +46115,7 @@ let w = 20;
 
 class Tail {
     constructor(master) {
+        this.type = 'tail';
         this.arr = [];
         this.waveInitArr = [];
         this.waveModulo = 0;
@@ -46122,13 +46123,22 @@ class Tail {
         this.grid = this.loadBoxes(this.grid);
     }
 
-    manUpdate() {
+    update(master) {
         this.arr.forEach(tile => {
             let x = tile.x;
             let y = tile.y;
-
             this.grid[x][y].mesh.mesh.visible = true;
+            if (tile.wave) {
+                let opacity = this.grid[x][y].mesh.mesh.material.opacity;
+
+                let HSL = this.grid[x][y].mesh.mesh.material.color.getHSL();
+                HSL.h += 0.02;
+                this.grid[x][y].mesh.mesh.material.color.setHSL(HSL.h, 0.5, 0.6);
+                this.grid[x][y].mesh.mesh.material.opacity += 0.2;
+            }
         });
+
+        return this.wave(master);
     }
 
     hideTail() {
@@ -46137,6 +46147,7 @@ class Tail {
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
                 this.grid[i][j].mesh.mesh.visible = false;
+                this.grid[i][j].mesh.mesh.material.color.setHex(0xff99ff);
             }
         }
     }
@@ -46163,25 +46174,8 @@ class Tail {
         return grid;
     }
 
-    makeTail(master) {
-        this.arr.forEach(data => {
-            if (data.wave) {
-                // noStroke()
-                // fill(200,0,150)
-            } else {
-                let size = 20;
-                let geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["BoxGeometry"](size, size, size);
-                let material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x0000ff });
-
-                let tailBuff = new __WEBPACK_IMPORTED_MODULE_1__Structures__["a" /* Box */](geometry, material);
-                tailBuff.setPosition(data.x * w, data.y * w, 20, 20);
-                master.addEntity(tailBuff);
-            }
-            // rect(data.x*w, data.y*w, 20, 20)
-        });
-    }
-
     waveInit(x, y) {
+
         this.arr.forEach((data, nr) => {
             if (data.x === x && data.y === y && data.wave === false) {
                 this.waveInitArr.push([nr, nr]);
@@ -46190,7 +46184,7 @@ class Tail {
         });
     }
 
-    wave() {
+    wave(master) {
         if (this.waveInitArr.length > 0 && this.waveModulo % 2 === 0) {
             this.waveInitArr.forEach(initSpot => {
                 let minus = initSpot[0]--;
@@ -46202,7 +46196,7 @@ class Tail {
                 if (plus < this.arr.length && this.waveInitArr.length > 0) {
                     this.arr[plus].wave = true;
                 } else {
-                    die();
+                    master.die();
                 }
             });
         }
@@ -46263,12 +46257,76 @@ class Cell {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__modules_Keyboard_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__modules_Keyboard_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__modules_Structures_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__modules_Pac_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__modules_Enemies_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__modules_Tail_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__modules_Field_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__modules_SceneManager_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_three__ = __webpack_require__(0);
 
 
 
-Promise.all([Object(__WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__["a" /* loadScene */])()]).then(([master]) => {
+
+
+
+
+
+
+
+function loadScene() {
+    //Init scene
+    let master = new __WEBPACK_IMPORTED_MODULE_6__modules_SceneManager_js__["a" /* default */](canvas1);
+    master.camera.position.z = 700;
+    //Lights
+    let light1 = {
+        type: new __WEBPACK_IMPORTED_MODULE_7_three__["AmbientLight"](0x888888),
+        pos: [50, 50, 50]
+    };
+    master.addLight(light1);
+
+    let light2 = {
+        type: new __WEBPACK_IMPORTED_MODULE_7_three__["PointLight"](0xffffff, 1, 100),
+        pos: [50, 50, 50]
+    };
+    master.addLight(light2);
+
+    master.field = new __WEBPACK_IMPORTED_MODULE_5__modules_Field_js__["a" /* Field */](master);
+    master.addGrid(master.field.grid, 'grid');
+
+    master.tail = new __WEBPACK_IMPORTED_MODULE_4__modules_Tail_js__["a" /* Tail */]();
+    master.addGrid(master.tail.grid, 'tail');
+
+    let floor = new __WEBPACK_IMPORTED_MODULE_1__modules_Structures_js__["a" /* Box */](new __WEBPACK_IMPORTED_MODULE_7_three__["BoxGeometry"](400, 400, 20), new __WEBPACK_IMPORTED_MODULE_7_three__["MeshBasicMaterial"]({ color: 0x333333 }));
+    floor.setPosition(200 - 10, 200 - 10, -20);
+    master.addEntity(floor);
+
+    let pacman = new __WEBPACK_IMPORTED_MODULE_2__modules_Pac_js__["a" /* Pac */]();
+    pacman.setStartPosition(0, 0);
+    pacman.listenTo(window);
+    master.addEntity(pacman);
+
+    let green = new __WEBPACK_IMPORTED_MODULE_3__modules_Enemies_js__["a" /* Bouncer */]();
+    green.setStartPosition(100, 300);
+    master.addEntity(green);
+
+    let green2 = new __WEBPACK_IMPORTED_MODULE_3__modules_Enemies_js__["a" /* Bouncer */]();
+    green2.setStartPosition(100, 100);
+    master.addEntity(green2);
+
+    let red = new __WEBPACK_IMPORTED_MODULE_3__modules_Enemies_js__["b" /* Eater */]();
+    red.setStartPosition(140, 300);
+    master.addEntity(red);
+
+    let red2 = new __WEBPACK_IMPORTED_MODULE_3__modules_Enemies_js__["b" /* Eater */]();
+    red2.setStartPosition(200, 300);
+    master.addEntity(red2);
+
+    return master;
+}
+
+Promise.all([loadScene()]).then(([master]) => {
 
     function render() {
         requestAnimationFrame(render);
@@ -46282,66 +46340,22 @@ Promise.all([Object(__WEBPACK_IMPORTED_MODULE_0__modules_Scene_js__["a" /* loadS
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = loadScene;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Pac_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Enemies_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Tail_js__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Field_js__ = __webpack_require__(12);
+class KeyboardState {
+    constructor() {
+        // Holds the current state of a given key
+        this.keyStates = new Map();
 
+        // Holds the callback functions for a key code
+        this.keyMap = new Map();
+    }
 
-
-
-
-
-
-
-function loadScene() {
-    //Init scene
-
-
-    let master = new __WEBPACK_IMPORTED_MODULE_0__SceneManager_js__["a" /* default */](canvas1);
-    master.camera.position.z = 1000;
-    //Lights
-    let light1 = {
-        type: new __WEBPACK_IMPORTED_MODULE_1_three__["AmbientLight"](0x888888),
-        pos: [50, 50, 50]
-    };
-    master.addLight(light1);
-
-    let light2 = {
-        type: new __WEBPACK_IMPORTED_MODULE_1_three__["PointLight"](0xffffff, 1, 100),
-        pos: [50, 50, 50]
-    };
-    master.addLight(light2);
-
-    master.field = new __WEBPACK_IMPORTED_MODULE_6__Field_js__["a" /* Field */](master);
-    master.addGrid(master.field.grid);
-
-    master.tail = new __WEBPACK_IMPORTED_MODULE_5__Tail_js__["a" /* Tail */]();
-    master.addGrid(master.tail.grid);
-
-    let floor = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](400, 400, 20), new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x333333 }));
-    floor.setPosition(200 - 10, 200 - 10, -20);
-    master.addEntity(floor);
-
-    let pacman = new __WEBPACK_IMPORTED_MODULE_3__Pac_js__["a" /* Pac */]();
-    pacman.setStartPosition(0, 40);
-    pacman.listenTo(window);
-    master.addEntity(pacman);
-
-    let green = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["a" /* Bouncer */](master);
-    green.setPosition(80, 80, -2);
-    master.addEntity(green);
-
-    let red = new __WEBPACK_IMPORTED_MODULE_4__Enemies_js__["b" /* Eater */]();
-    red.setPosition(120, 80, 2);
-    master.addEntity(red);
-
-    return master;
 }
+/* unused harmony export KeyboardState */
+
+
+function keyPressed() {}
+
+function keyReleased() {}
 
 /***/ }),
 /* 7 */
@@ -46349,8 +46363,1001 @@ function loadScene() {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tail_js__ = __webpack_require__(3);
 
-__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(8)(__WEBPACK_IMPORTED_MODULE_0_three__);
+
+
+let w = 20;
+let cols = 20;
+let rows = 20;
+
+class Pac {
+    constructor() {
+        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](10, 32, 32);
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xffff00 });
+        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
+        this.traits = [];
+        this.type = 'pacman';
+
+        this.x = this.mesh.position.x;
+        this.y = this.mesh.position.y;
+
+        this.ID = this.mesh.uuid;
+        this.visible = this.mesh.visible;
+        this.solid = false;
+
+        this.alive = true;
+        this.direction = '';
+        this.lastDirection = '';
+        this.keyIsPressed = false;
+        this.tail = false;
+        this.flying = false;
+        this.aniSpeed = 4;
+        this.prevX = w / 2;
+        this.prevY = w / 2;
+        this.r = 9;
+    }
+
+    addTrait(trait) {
+        this.traits.push(trait);
+    }
+
+    setPosition(x, y, z = 0) {
+        this.mesh.position.set(x, y, z);
+    }
+    setStartPosition(x, y, dir = 'right', z = 20) {
+        this.mesh.position.set(x, y, z);
+        this.x = x;
+        this.y = y;
+        // this.direction = dir
+    }
+
+    update(master, tail) {
+
+        this.move();
+        this.moveAni();
+
+        this.take(master, tail);
+    }
+
+    move() {
+        let moduloX = false;
+        let moduloY = false;
+        if (this.mesh.position.y % this.y === 0 || isNaN(this.mesh.position.y % this.y)) {
+            moduloY = true;
+        }
+
+        if (this.mesh.position.x % this.x === 0 || isNaN(this.mesh.position.x % this.x)) {
+            moduloX = true;
+        }
+
+        switch (this.direction) {
+            case 'up':
+                if (this.y < cols * w - w && moduloY && moduloX) {
+                    this.prevX = this.x;
+                    this.prevY = this.y;
+                    this.y = this.y + w;
+                }
+                break;
+            case 'down':
+                if (this.y > w / 2 && moduloY && moduloX) {
+                    this.prevX = this.x;
+                    this.prevY = this.y;
+                    this.y = this.y - w;
+                }
+                break;
+            case 'right':
+                if (this.x < rows * w - w && moduloX && moduloY) {
+                    this.prevY = this.y;
+                    this.prevX = this.x;
+                    this.x = this.x + w;
+                }
+                break;
+            case 'left':
+                if (this.x > w / 2 && moduloX && moduloY) {
+                    this.prevY = this.y;
+                    this.prevX = this.x;
+                    this.x = this.x - w;
+                }
+                break;
+        }
+    }
+    moveAni() {
+
+        if (this.direction === "up" && this.mesh.position.y < cols * w - w && this.y > this.mesh.position.y || this.y > this.mesh.position.y) {
+            this.mesh.position.y = this.mesh.position.y + this.aniSpeed;
+            return;
+        } else if (this.direction === "down" && this.y > w / 2 && this.y < this.mesh.position.y || this.y < this.mesh.position.y) {
+            this.mesh.position.y = this.mesh.position.y - this.aniSpeed;
+            return;
+        } else if (this.direction === "right" && this.aniX < rows * w - w && this.x > this.mesh.position.x || this.x > this.mesh.position.x) {
+            this.mesh.position.x = this.mesh.position.x + this.aniSpeed;
+            return;
+        } else if (this.direction === "left" && this.mesh.position.x > w / 2 && this.x < this.mesh.position.x || this.x < this.mesh.position.x) {
+            this.mesh.position.x = this.mesh.position.x - this.aniSpeed;
+            return;
+        }
+    }
+
+    listenTo(window) {
+        ['keydown', 'keyup'].forEach(eventName => {
+            window.addEventListener(eventName, event => {
+                let keyCode = event.keyCode;
+                if (eventName === 'keydown') {
+                    if (keyCode === 39) {
+                        if (this.flying && this.direction === "left") {
+                            return;
+                        } else {
+                            this.keyIsPressed = true;
+                            this.direction = "right";
+                            this.lastDirection = this.direction;
+                        }
+                    } else if (keyCode === 37) {
+                        if (this.flying && this.direction === "right") {
+                            return;
+                        } else {
+                            this.keyIsPressed = true;
+
+                            this.direction = "left";
+                            this.lastDirection = this.direction;
+                        }
+                    } else if (keyCode === 38) {
+                        if (this.flying && this.direction === "down") {
+                            return;
+                        } else {
+                            this.keyIsPressed = true;
+
+                            this.direction = "up";
+                            this.lastDirection = this.direction;
+                        }
+                    } else if (keyCode === 40) {
+                        if (this.flying && this.direction === "up") {
+                            return;
+                        } else {
+                            this.keyIsPressed = true;
+
+                            this.direction = "down";
+                            this.lastDirection = this.direction;
+                        }
+                    }
+                }
+
+                if (eventName === 'keyup') {
+                    if (this.direction === "right" && keyCode === 39 && !this.flying) {
+                        this.keyIsPressed = false;
+                        this.direction = "";
+                    } else if (this.direction === "left" && keyCode === 37 && !this.flying) {
+                        this.keyIsPressed = false;
+
+                        this.direction = "";
+                    } else if (this.direction === "up" && keyCode === 38 && !this.flying) {
+                        this.keyIsPressed = false;
+
+                        this.direction = "";
+                    } else if (this.direction === "down" && keyCode === 40 && !this.flying) {
+                        this.keyIsPressed = false;
+                        this.direction = "";
+                    }
+                }
+            });
+        });
+    }
+
+    take(master, tailInput) {
+        let field = master.field;
+        let grid = field.grid;
+        let tail = tailInput;
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false) {
+                    this.flying = true;
+                }
+
+                if (this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true) {
+                    grid[i][j].tail = true;
+                    tail.arr.push(new __WEBPACK_IMPORTED_MODULE_1__Tail_js__["b" /* TailCell */](i, j));
+                    master.field.initLineChecks(master);
+                }
+            }
+        }
+
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === true && this.flying) {
+                    for (let k = 0; k < tail.arr.length; k++) {
+                        grid[tail.arr[k].x][tail.arr[k].y].mesh.mesh.visible = true;
+                        grid[tail.arr[k].x][tail.arr[k].y].on = true;
+                        grid[tail.arr[k].x][tail.arr[k].y].tail = false;
+                    }
+
+                    field.checkFlood(tail, master.enemies);
+                    tail.arr = [];
+                    tail.waveInitArr = [];
+                    tail.hideTail();
+                    field.emptyRoute();
+                    field.initLineChecks(master);
+                    this.flying = false;
+                    master.countScore();
+
+                    this.direction = '';
+                }
+            }
+        }
+
+        for (let i = 0; i < tail.arr.length - 1; i++) {
+            if (tail.arr[i].x === this.x / w && tail.arr[i].y === this.y / w) {
+                master.die();
+            }
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Pac;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__InnerMonster__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Math__ = __webpack_require__(1);
+
+
+
+
+class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
+    constructor(x, y) {
+        super();
+        this.r = 10;
+        this.position = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](x, y, -2);
+        this.type = 'bouncer';
+        this.d = 16;
+        this.mass = 10;
+        this.angleArr = [-90, -180];
+        this.angleArr = [0, -180];
+        // this.angle = (180 - 45) * Math.random(1) * (Math.PI / 180);
+        this.angle = 360 * Math.random(1) * (Math.PI / 180);
+        // this.angle = 90 * (Math.PI / 180);
+
+        this.origSpeed = 2;
+        this.speed = this.origSpeed;
+        this.speedTemp = this.speed;
+        this.angleTemp = this.angle;
+
+        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
+        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
+        this.ID = this.mesh.uuid;
+        this.setPosition(this.position.x, this.position.y, this.position.z);
+    }
+
+    setPosition(x, y, z = -2) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setStartPosition(x, y, z = -2) {
+        this.position.x = x + 10;
+        this.position.y = y + 10;
+    }
+
+    update(master) {
+        this.collideWithTail(master);
+        this.collideWithBorder(master.field.consolidatedLines);
+        this.walk();
+        this.setPosition(this.position.x - 10, this.position.y - 10, this.position.z);
+        this.collideWithPacman(master);
+    }
+
+    collideWithBorder(lines) {
+        let collidingLines = this.lineCollideCheck(lines);
+        let collidingLineEnd = this.lineEndCollideCheck(lines);
+        this.type = 'eater';
+
+        if (collidingLines.length > 0) {
+            collidingLines.forEach(line => {
+                this.bounce(line);
+            });
+            return;
+        } else if (collidingLineEnd) {
+            this.endPointBounce(collidingLineEnd);
+        } else {
+            //DO NOTHING
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Bouncer;
+
+
+class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
+    constructor() {
+        super();
+
+        this.position = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](80, 150, -2);
+        this.type = 'eater';
+
+        this.d = 16;
+        this.r = 10;
+        this.mass = 10;
+        this.angleArr = [-90, -180];
+        this.angleArr = [0, -180];
+        this.angle = 360 * Math.random(1) * (Math.PI / 180);
+        // this.angle = 271+180 * (Math.PI / 180);
+
+        this.origSpeed = 1.5;
+        this.speed = this.origSpeed;
+        this.speedTemp = this.speed;
+        this.angleTemp = this.angle;
+
+        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
+        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xff0000 });
+        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
+        this.ID = this.mesh.uuid;
+
+        // this.setPosition(this.position.x-10, this.position.y-10, this.position.z)
+    }
+
+    setPosition(x, y = 0, z) {
+        this.mesh.position.set(x, y, z);
+    }
+
+    setStartPosition(x, y, z = 2) {
+        this.position.x = x + 10;
+        this.position.y = y + 10;
+    }
+
+    update(master) {
+        this.collideWithTail(master);
+        this.collideWithBorder(master.field.consolidatedLines, master);
+        // if (gameActive) {
+        this.walk();
+        this.setPosition(this.position.x - 10, this.position.y - 10, this.position.z);
+        this.collideWithPacman(master);
+    }
+
+    collideWithBorder(lines, master) {
+        let collidingLines = this.lineCollideCheck(lines);
+        let collidingLineEnd = this.lineEndCollideCheck(lines);
+        if (collidingLines.length > 0) {
+            collidingLines.forEach(line => {
+                this.bounce(line);
+                this.eatCell(master);
+            });
+            return;
+        } else if (collidingLineEnd) {
+            this.endPointBounce(collidingLineEnd);
+            this.eatCell(master);
+        } else {
+            //DO NOTHING
+        }
+    }
+
+    eatCell(master) {
+        let grid = master.field.grid;
+
+        let pacman = master.pacman[0];
+        let field = master.field;
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                if (this.squareCollide(i, j, grid) && grid[i][j].onPermanent === false && grid[i][j].on) {
+                    grid[i][j].on = false;
+                    grid[i][j].mesh.mesh.visible = false;
+                    grid[i][j].activeLines = [];
+                    master.countScore();
+                    field.initLineChecks(master);
+                    if (grid[i][j].x2 - 10 === pacman.mesh.position.x && grid[i][j].y2 - 10 === pacman.mesh.position.y) {
+                        pacman.direction = pacman.lastDirection;
+                        pacman.flying = true;
+                    }
+                }
+            }
+        }
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = Eater;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Math_js__ = __webpack_require__(1);
+
+
+let w = 20;
+
+class InnerMonster {
+
+    walk() {
+        this.position.y -= Math.sin(this.angle) * this.speed;
+        this.position.x += Math.cos(this.angle) * this.speed;
+        this.speed = this.origSpeed;
+        this.collMonster = false;
+    }
+
+    collideWithTail(master) {
+        let tail = master.tail;
+        if (tail.arr.length > 0) {
+            for (let i = 0; i < tail.grid.length; i++) {
+                for (let j = 0; j < tail.grid[i].length; j++) {
+                    if (tail.grid[i][j].mesh.mesh.visible === true && this.squareCollide(i, j, tail.grid)) {
+                        tail.waveInit(i, j);
+                        // master.die()
+                    }
+                }
+            }
+        }
+    }
+
+    collideWithPacman(master) {
+        let pacman = master.pacman[0];
+        if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(pacman.aniX, pacman.aniY, this.position.x, this.position.y) < pacman.r + this.r && pacman.flying) {
+            master.die();
+        }
+    }
+
+    setPostCollSpeedAngle() {
+        if (this.collMonster === true) {
+            this.speed = this.speedTemp;
+            this.angle = this.angleTemp;
+            this.collMonster = false;
+        }
+    }
+
+    collideWithMonster(monsters) {
+        for (let i = 0; i < monsters.length; i++) {
+            let monster = monsters[i];
+            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.position.x, this.position.y, monster.position.x, monster.position.y) < this.r - 1.5 + monster.r - 1.5 && monster.ID !== this.ID) {
+                let second = monster;
+                let thisSpeedX = Math.cos(this.angle) * this.speed;
+                let thisSpeedY = Math.sin(this.angle) * this.speed;
+                let secondSpeedX = Math.cos(second.angle) * second.speed;
+                let secondSpeedY = Math.sin(second.angle) * second.speed;
+
+                let collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
+                let collisionPointY = (this.y * second.r + second.y * this.r) / (this.r + second.r);
+
+                let thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
+                let thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
+                let secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
+                let secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
+
+                this.collMonster = true;
+                this.angleTemp = Math.atan2(thisNewY, thisNewX);
+                this.speedTemp = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(0, 0, thisNewX, thisNewY);
+
+                return;
+            }
+        }
+    }
+
+    bounce(line) {
+        let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
+        let linePerpSlope = -1 / lineSlope;
+
+        let thisAngleDeg = this.angle * (180 / Math.PI);
+        let linePerpRad = Math.atan(linePerpSlope, 1);
+
+        let linePerpDeg = linePerpRad * (180 / Math.PI) * -1 + 180;
+        let newAngleDiff = (thisAngleDeg - linePerpDeg) * 2;
+        let newAngle = thisAngleDeg - newAngleDiff + 180;
+        let newAngleRad = newAngle * (Math.PI / 180);
+        this.angle = newAngleRad;
+        this.speed = this.speed;
+    }
+
+    endPointBounce(point) {
+        let p = point;
+        let pc = { x: p.x, y: p.y, r: this.r };
+        let dot = { x: this.position.x, y: this.position.y, angle: this.angle * (180 / Math.PI) };
+
+        let diffY = dot.y - pc.y;
+        let diffX = dot.x - pc.x;
+
+        let angleOfColl = Math.atan2(diffY, diffX) * -1 * (180 / Math.PI);
+
+        let diffAngle = (dot.angle - 180 - angleOfColl) * 2;
+        let newAngleinRad = (dot.angle - 180 - diffAngle) * (Math.PI / 180);
+
+        this.angle = newAngleinRad;
+        this.speed = this.speed;
+    }
+
+    squareCollide(i, j, grid) {
+
+        let distX = Math.abs(this.position.x - grid[i][j].x - w / 2);
+        let distY = Math.abs(this.position.y - grid[i][j].y - w / 2);
+
+        if (distX > w / 2 + this.r) {
+            return false;
+        }
+        if (distY > w / 2 + this.r) {
+            return false;
+        }
+
+        if (distX <= w / 2) {
+            return true;
+        }
+        if (distY <= w / 2) {
+            return true;
+        }
+
+        let dx = distX - w / 2;
+        let dy = distY - w / 2;
+
+        return dx * dx + dy * dy <= this.r * this.r;
+    }
+
+    lineEndCollideCheck(lines) {
+
+        let point;
+        let endPointCollides;
+
+        for (let i = 0; i < lines.length; i++) {
+            let l = lines[i];
+
+            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x1, l.y1, this.position.x, this.position.y) < Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x2, l.y2, this.position.x, this.position.y)) {
+                point = { x: l.x1, y: l.y1 };
+            } else {
+                point = { x: l.x2, y: l.y2 };
+            }
+
+            endPointCollides = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.position.x, this.position.y, point.x, point.y) < this.r;
+
+            if (endPointCollides) {
+                return point;
+            } else {
+                //DO NOTHING
+            }
+        }
+    }
+
+    lineCollideCheck(lines) {
+        let lineSlope;
+        let objSlope;
+        let lineOff;
+        let objOff;
+        let newX;
+        let newY;
+        let v;
+        let m;
+        let m2;
+        let dotProduct1;
+        let dotProduct2;
+        let withinBoundries;
+        let isOnInfLine;
+        let linesToReturn = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            let l = lines[i];
+
+            if (l.x1 === l.x2) {
+                lineSlope = 0;
+            } else {
+                lineSlope = (l.y2 - l.y1) / (l.x2 - l.x1);
+            }
+
+            if (lineSlope === 0) {
+                objSlope = 0;
+            } else {
+                objSlope = -1 / lineSlope;
+            }
+
+            lineOff = l.y1 - l.x1 * lineSlope;
+            objOff = this.position.y - this.position.x * objSlope;
+
+            if (l.x1 == l.x2) {
+                newX = l.x1;
+                newY = this.position.y;
+            } else if (l.y1 == l.y2) {
+                newY = l.y1;
+                newX = this.position.x;
+            } else {
+                newX = (objOff - lineOff) / (lineSlope - objSlope);
+                newY = newX * objSlope + objOff;
+            }
+
+            v = { x: l.x2 - l.x1, y: l.y2 - l.y1 };
+            m = { x: this.position.x - l.x1, y: this.position.y - l.y1 };
+            m2 = { x: this.position.x - l.x2, y: this.position.y - l.y2 };
+
+            dotProduct1 = v.x * m.x + v.y * m.y;
+            dotProduct2 = v.x * m2.x + v.y * m2.y;
+
+            withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
+
+            isOnInfLine = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.position.x, this.position.y, newX, newY) < this.r;
+
+            if (isOnInfLine && withinBoundries) {
+                linesToReturn.push(l);
+            } else {
+                //DO NOTHING
+            }
+        }
+        return linesToReturn;
+    }
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = InnerMonster;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Cell_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Math_js__ = __webpack_require__(1);
+
+
+
+
+
+let w = 20;
+let cols = 20;
+let rows = 20;
+
+class Field {
+    constructor(master) {
+        this.grid = Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["c" /* new2DArray */])(20, 20);
+        this.grid = this.loadBoxes(this.grid);
+
+        this.getFlood = [];
+        this.floodArr = [];
+
+        this.lines = [];
+        this.consolidatedLines = [];
+        this.initLineChecks(master);
+    }
+
+    loadBoxes(grid) {
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                let size = 20;
+                let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
+                let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
+
+                let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
+                entity.setPosition(i * size, j * size, 0);
+
+                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_0__Cell_js__["a" /* Cell */](i, j);
+
+                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
+                    entity.mesh.visible = true;
+                    grid[i][j].on = true;
+                    grid[i][j].onPermanent = true;
+                } else {
+                    entity.mesh.visible = false;
+                }
+                grid[i][j].mesh = entity;
+            }
+        }
+
+        return grid;
+    }
+
+    // Floodfill methods
+
+
+    floodFill(cell) {
+        let grid = this.grid;
+        if (cell.on === false && cell.hasFlooded === false) {
+            cell.hasFlooded = true;
+            this.floodArr.push(cell.i);
+
+            this.floodFill(grid[cell.i[0]][cell.i[1] + 1]);
+            this.floodFill(grid[cell.i[0]][cell.i[1] - 1]);
+            this.floodFill(grid[cell.i[0] + 1][cell.i[1]]);
+            this.floodFill(grid[cell.i[0] - 1][cell.i[1]]);
+
+            return this.floodArr;
+        }
+    }
+
+    floodReset() {
+        this.getFlood = [];
+        for (let i = 0; i < this.grid.length; i++) {
+            for (let j = 0; j < this.grid[i].length; j++) {
+                this.grid[i][j].hasFlooded = false;
+            }
+        }
+    }
+
+    checkFloodDir(dir) {
+
+        if (!dir.on && !dir.hasFlooded && !dir.tail) {
+            let buffer = this.floodFill(this.grid[dir.i[0]][dir.i[1]]);
+            this.getFlood.push(buffer);
+            this.floodArr = [];
+        }
+    }
+
+    checkArrForMonster(floodAreas, enemies) {
+        let currentX;
+        let currentY;
+        let currentCell;
+        let area;
+        let foundMoster;
+        for (let i = 0; i < floodAreas.length; i++) {
+            area = floodAreas[i];
+            foundMoster = false;
+
+            for (let ii = 0; ii < area.length; ii++) {
+                currentX = area[ii][0];
+                currentY = area[ii][1];
+                currentCell = this.grid[currentX][currentY];
+
+                for (let iii = 0; iii < enemies.length; iii++) {
+                    if (Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["b" /* dist */])(currentCell.x, currentCell.y, enemies[iii].position.x, enemies[iii].position.y) < w) {
+                        foundMoster = true;
+                    }
+                }
+            }
+            if (foundMoster) {
+                //DO NOTHING
+            } else {
+                for (let ii = 0; ii < area.length; ii++) {
+                    currentX = area[ii][0];
+                    currentY = area[ii][1];
+                    currentCell = this.grid[currentX][currentY];
+                    currentCell.on = true;
+                    currentCell.mesh.mesh.visible = true;
+                }
+            }
+        }
+    }
+
+    checkFlood(tail, monsters) {
+        var grid = this.grid;
+
+        let x, y, potFloodUp, potFloodDown, potFloodLeft, potFloodRight;
+
+        for (let k = 0; k < tail.arr.length; k++) {
+            x = tail.arr[k].x;
+            y = tail.arr[k].y;
+            potFloodDown = grid[x][y + 1];
+            potFloodUp = grid[x][y - 1];
+            potFloodRight = grid[x - 1][y];
+            potFloodLeft = grid[x + 1][y];
+
+            this.checkFloodDir(potFloodDown);
+            this.checkFloodDir(potFloodUp);
+            this.checkFloodDir(potFloodRight);
+            this.checkFloodDir(potFloodLeft);
+        }
+
+        this.checkArrForMonster(this.getFlood, monsters);
+        this.floodReset();
+    }
+
+    emptyRoute() {
+        for (let i = 0; i < this.grid.length; i++) {
+            for (let j = 0; j < this.grid[i].length; j++) {
+                this.grid[i][j].tail = false;
+            }
+        }
+    }
+
+    // Line methods
+
+    initLineChecks(master) {
+
+        let grid = this.grid;
+
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid[i].length; j++) {
+                if (grid[i][j].on === true || grid[i][j].tail === true) {
+                    this.lineCheck(grid[i][j]);
+                }
+            }
+        }
+
+        let fieldMeshChildren = master.scene.children[0].children;
+        let fieldContainer = master.scene.children[0];
+
+        if (fieldMeshChildren.length > 0) {
+            this.emptyWalls(this.consolidatedLines, fieldMeshChildren, fieldContainer);
+        }
+
+        this.consolidatedLines = this.consolidateLines();
+
+        this.createWalls(this.consolidatedLines, master);
+    }
+
+    emptyWalls(lines, children, scene) {
+        for (var i = 0; i < lines.length; i++) {
+            for (var j = 0; j < children.length; j++) {
+                if (lines[i].ID === children[j].uuid) {
+                    scene.remove(children[j]);
+                }
+            }
+        }
+    }
+
+    createWalls(lines, master) {
+        lines.forEach(lineData => {
+            this.createWall(lineData, master);
+        });
+    }
+
+    createWall(data, master) {
+        function minimumThickness(wall) {
+            if (wall === 0) {
+                wall = 2;
+            } else {
+                return wall;
+            }
+            return wall;
+        }
+
+        let distX = Math.abs(data.x1 - data.x2 - 4);
+        let distY = Math.abs(data.y1 - data.y2 - 4);
+
+        distX = minimumThickness(distX);
+        distY = minimumThickness(distY);
+
+        let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](distX, distY, 25);
+        let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0xff00ff });
+
+        let wall = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
+        // if (data.pos === 'bottom' || data.pos === 'top'){
+        //     wall.setPosition(data.x1 + 180-10, data.y1-10, 0)
+        // }
+
+        // if (data.pos === 'left' || data.pos === 'right'){
+        //     wall.setPosition(data.x1 -10, data.y1+ 180-10, 0)
+        // }
+        wall.setPosition(data.x1 + distX / 2 - 11, data.y1 + distY / 2 - 11, 0);
+
+        data.ID = wall.ID;
+        master.addEntity(wall);
+    }
+
+    lineCheck(cell) {
+
+        cell.activeLines = [];
+
+        let grid = this.grid;
+        let thisX = cell.i[0];
+        let thisY = cell.i[1];
+
+        let above = thisY - 1;
+        let below = thisY + 1;
+        let left = thisX - 1;
+        let right = thisX + 1;
+
+        if (above >= 0 && grid[thisX][above].on === false && grid[thisX][above].tail === false) {
+            cell.activeLines.push(cell.lines[0]);
+        }
+        if (left >= 0 && grid[left][thisY].on === false && grid[left][thisY].tail === false) {
+            cell.activeLines.push(cell.lines[3]);
+        }
+        if (below < cols && grid[thisX][below].on === false && grid[thisX][below].tail === false) {
+            cell.activeLines.push(cell.lines[2]);
+        }
+        if (right < rows && grid[right][thisY].on === false && grid[right][thisY].tail === false) {
+            cell.activeLines.push(cell.lines[1]);
+        }
+    }
+
+    consolidateLines() {
+
+        let grid = this.grid;
+        let linesY = [];
+        let linesX = [];
+        let allLines = [];
+        let consolidatedLines = [];
+
+        let y;
+        let x;
+        let smallestX;
+        let smallestY;
+        let lastItem;
+        let largestX;
+        let largestY;
+        let newLine;
+        let mult;
+
+        for (let j = 0; j < cols; j++) {
+            for (let i = 0; i < rows; i++) {
+                if (grid[i][j].activeLines.length > 0) {
+
+                    grid[i][j].activeLines.forEach(data => {
+                        allLines.push(data);
+                    });
+                }
+            }
+        }
+        for (let i = 0; i < allLines.length; i++) {
+            allLines[i].checked = false;
+        }
+
+        for (let i = 0; i < allLines.length; i++) {
+            let l1 = allLines[i];
+            if (l1.y1 === l1.y2) {
+                mult = 1;
+                for (let j = 0; j < allLines.length; j++) {
+                    let l2 = allLines[j];
+                    if (l1.y1 === l2.y1 && l1.y2 === l2.y2 && l2.checked === false && i !== j && l1.x1 === l2.x1 - w * mult) {
+                        linesY.push(l2);
+                        allLines[j].checked = true;
+                        mult++;
+                    }
+                }
+
+                if (linesY.length > 0) {
+                    y = l1.y1;
+                    smallestX = l1.x1;
+                    lastItem = linesY.length - 1;
+                    largestX = linesY[lastItem].x2;
+                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
+
+                    consolidatedLines.push(newLine);
+
+                    allLines[i].checked = true;
+                    linesY = [];
+                } else if (linesY.length === 0 && allLines[i].checked === false) {
+                    y = l1.y1;
+                    smallestX = l1.x1;
+                    largestX = l1.x2;
+                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
+
+                    consolidatedLines.push(newLine);
+                }
+            }
+
+            if (l1.x1 === l1.x2) {
+                mult = 1;
+                for (let j = 0; j < allLines.length; j++) {
+                    let l2 = allLines[j];
+                    if (l1.x1 === l2.x1 && l1.x2 === l2.x2 && l2.checked === false && i !== j && l1.y1 === l2.y1 - w * mult) {
+                        linesX.push(l2);
+                        allLines[j].checked = true;
+                        mult++;
+                    }
+                }
+
+                if (linesX.length > 0) {
+                    x = l1.x1;
+                    smallestY = l1.y1;
+                    lastItem = linesX.length - 1;
+                    largestY = linesX[lastItem].y2;
+                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
+
+                    consolidatedLines.push(newLine);
+
+                    allLines[i].checked = true;
+                    linesX = [];
+                } else if (linesX.length === 0 && allLines[i].checked === false) {
+                    x = l1.x1;
+                    smallestY = l1.y1;
+                    largestY = l1.y2;
+                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
+
+                    consolidatedLines.push(newLine);
+                }
+            }
+
+            allLines[i].checked = true;
+        }
+        return consolidatedLines;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
+
+__WEBPACK_IMPORTED_MODULE_0_three__["OrbitControls"] = __webpack_require__(12)(__WEBPACK_IMPORTED_MODULE_0_three__);
 
 class SceneManager {
     constructor() {
@@ -46368,6 +47375,8 @@ class SceneManager {
         this.tail;
         this.enemies = [];
         this.pacman = [];
+        this.walls = [];
+        this.score = 0;
 
         this.boardContainer = new __WEBPACK_IMPORTED_MODULE_0_three__["Object3D"]();
         this.boardContainer.position.set(-200, -200, 0);
@@ -46376,8 +47385,6 @@ class SceneManager {
         this.renderer.setClearColor(0xeefff999);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight - 5);
-
-        this.update();
     }
 
     updateEntities() {
@@ -46387,18 +47394,24 @@ class SceneManager {
     }
 
     addLight(newLight) {
-
         let light = newLight.type;
         light.position.set(...newLight.pos);
         this.scene.add(light);
     }
 
-    addGrid(grid) {
+    addGrid(grid, name) {
+        let buffer = {
+            [name]: new __WEBPACK_IMPORTED_MODULE_0_three__["Object3D"]()
+        };
+        buffer[name].name = name;
+
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
-                this.addEntity(grid[i][j].mesh);
+                buffer[name].add(grid[i][j].mesh.mesh);
             }
         }
+
+        this.boardContainer.add(buffer[name]);
     }
 
     addEntity(entity) {
@@ -46413,6 +47426,10 @@ class SceneManager {
             this.pacman.push(entity);
         }
 
+        if (entity.type === 'wall') {
+            this.walls.push(entity);
+        }
+
         this.entities.push(entity);
     }
 
@@ -46423,7 +47440,9 @@ class SceneManager {
     update() {
         // this.controls.update()
         this.updateEntities();
-        this.renderer.render(this.scene, this.camera);
+
+        this.tail.update(this);
+
         let enemies = this.enemies;
         let currentEnemy;
         for (let i = 0; i < enemies.length; i++) {
@@ -46435,6 +47454,9 @@ class SceneManager {
             currentEnemy = enemies[i];
             currentEnemy.setPostCollSpeedAngle(enemies);
         }
+
+        this.showScore();
+        this.renderer.render(this.scene, this.camera);
     }
 
     die() {
@@ -46455,6 +47477,8 @@ class SceneManager {
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
                 this.tail.grid[i][j].mesh.mesh.visible = false;
+                this.tail.grid[i][j].mesh.mesh.material.opacity = 0.2;
+                this.tail.grid[i][j].mesh.mesh.material.color.setHex(0xff99ff);
                 grid[i][j].activeLines = [];
 
                 if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
@@ -46468,12 +47492,39 @@ class SceneManager {
             }
         }
     }
+
+    countScore() {
+        let score = 0;
+        let avaliable = 0;
+        let scoreSpan;
+
+        for (var i = 0; i < this.field.grid.length; i++) {
+            for (var j = 0; j < this.field.grid[i].length; j++) {
+                let current = this.field.grid[i][j];
+                if (current.on && !current.onPermanent) {
+                    score++;
+                }
+                if (!current.onPermanent) {
+                    avaliable++;
+                }
+            }
+        }
+        this.score = Math.floor(score / avaliable * 100 / 80 * 100);
+        if (this.score > 100) {
+            this.score = 100;
+        }
+
+        scoreSpan = document.getElementById('score');
+        scoreSpan.textContent = this.score;
+    }
+
+    showScore() {}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = SceneManager;
 
 
 /***/ }),
-/* 8 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = function( THREE ) {
@@ -47497,1012 +48548,6 @@ module.exports = function( THREE ) {
 	return OrbitControls;
 };
 
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tail_js__ = __webpack_require__(3);
-
-
-
-let w = 20;
-let cols = 20;
-let rows = 20;
-
-class Pac {
-    constructor() {
-        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](10, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xffff00 });
-        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
-        this.traits = [];
-        this.type = 'pacman';
-
-        this.x = this.mesh.position.x;
-        this.y = this.mesh.position.y;
-
-        this.ID = this.mesh.uuid;
-        this.visible = this.mesh.visible;
-        this.solid = false;
-
-        this.alive = true;
-        this.direction = '';
-        this.lastDirection = '';
-        this.keyIsPressed = false;
-        this.tail = false;
-        this.flying = false;
-        this.aniSpeed = 4;
-        this.prevX = w / 2;
-        this.prevY = w / 2;
-        this.r = 9;
-    }
-
-    addTrait(trait) {
-        this.traits.push(trait);
-    }
-
-    setPosition(x, y, z = 0) {
-        this.mesh.position.set(x, y, z);
-    }
-    setStartPosition(x, y, dir = 'right', z = 20) {
-        this.mesh.position.set(x, y, z);
-        this.x = x;
-        this.y = y;
-        this.direction = dir;
-    }
-
-    update(master, tail) {
-
-        this.move();
-        this.moveAni();
-
-        this.take(master, tail);
-    }
-
-    move() {
-        let moduloX = false;
-        let moduloY = false;
-        if (this.mesh.position.y % this.y === 0 || isNaN(this.mesh.position.y % this.y)) {
-            moduloY = true;
-        }
-
-        if (this.mesh.position.x % this.x === 0 || isNaN(this.mesh.position.x % this.x)) {
-            moduloX = true;
-        }
-
-        switch (this.direction) {
-            case 'up':
-                if (this.y < cols * w - w && moduloY && moduloX) {
-                    this.prevX = this.x;
-                    this.prevY = this.y;
-                    this.y = this.y + w;
-                }
-                break;
-            case 'down':
-                if (this.y > w / 2 && moduloY && moduloX) {
-                    this.prevX = this.x;
-                    this.prevY = this.y;
-                    this.y = this.y - w;
-                }
-                break;
-            case 'right':
-                if (this.x < rows * w - w && moduloX && moduloY) {
-                    this.prevY = this.y;
-                    this.prevX = this.x;
-                    this.x = this.x + w;
-                }
-                break;
-            case 'left':
-                if (this.x > w / 2 && moduloX && moduloY) {
-                    this.prevY = this.y;
-                    this.prevX = this.x;
-                    this.x = this.x - w;
-                }
-                break;
-        }
-    }
-    moveAni() {
-
-        if (this.direction === "up" && this.mesh.position.y < cols * w - w && this.y > this.mesh.position.y || this.y > this.mesh.position.y) {
-            this.mesh.position.y = this.mesh.position.y + this.aniSpeed;
-            return;
-        } else if (this.direction === "down" && this.y > w / 2 && this.y < this.mesh.position.y || this.y < this.mesh.position.y) {
-            this.mesh.position.y = this.mesh.position.y - this.aniSpeed;
-            return;
-        } else if (this.direction === "right" && this.aniX < rows * w - w && this.x > this.mesh.position.x || this.x > this.mesh.position.x) {
-            this.mesh.position.x = this.mesh.position.x + this.aniSpeed;
-            return;
-        } else if (this.direction === "left" && this.mesh.position.x > w / 2 && this.x < this.mesh.position.x || this.x < this.mesh.position.x) {
-            this.mesh.position.x = this.mesh.position.x - this.aniSpeed;
-            return;
-        }
-    }
-
-    listenTo(window) {
-        ['keydown', 'keyup'].forEach(eventName => {
-            window.addEventListener(eventName, event => {
-                let keyCode = event.keyCode;
-                if (eventName === 'keydown') {
-                    if (keyCode === 39) {
-                        if (this.flying && this.direction === "left") {
-                            return;
-                        } else {
-                            this.keyIsPressed = true;
-                            this.direction = "right";
-                            this.lastDirection = this.direction;
-                        }
-                    } else if (keyCode === 37) {
-                        if (this.flying && this.direction === "right") {
-                            return;
-                        } else {
-                            this.keyIsPressed = true;
-
-                            this.direction = "left";
-                            this.lastDirection = this.direction;
-                        }
-                    } else if (keyCode === 38) {
-                        if (this.flying && this.direction === "down") {
-                            return;
-                        } else {
-                            this.keyIsPressed = true;
-
-                            this.direction = "up";
-                            this.lastDirection = this.direction;
-                        }
-                    } else if (keyCode === 40) {
-                        if (this.flying && this.direction === "up") {
-                            return;
-                        } else {
-                            this.keyIsPressed = true;
-
-                            this.direction = "down";
-                            this.lastDirection = this.direction;
-                        }
-                    }
-                }
-
-                if (eventName === 'keyup') {
-                    if (this.direction === "right" && keyCode === 39 && !this.flying) {
-                        this.keyIsPressed = false;
-                        this.direction = "";
-                    } else if (this.direction === "left" && keyCode === 37 && !this.flying) {
-                        this.keyIsPressed = false;
-
-                        this.direction = "";
-                    } else if (this.direction === "up" && keyCode === 38 && !this.flying) {
-                        this.keyIsPressed = false;
-
-                        this.direction = "";
-                    } else if (this.direction === "down" && keyCode === 40 && !this.flying) {
-                        this.keyIsPressed = false;
-                        this.direction = "";
-                    }
-                }
-            });
-        });
-    }
-
-    take(master, tailInput) {
-        let field = master.field;
-        let grid = field.grid;
-        let tail = tailInput;
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === false) {
-                    this.flying = true;
-                }
-
-                if (this.prevX === grid[i][j].x && this.prevY === grid[i][j].y && grid[i][j].on === false && grid[i][j].tail === false && this.flying === true) {
-                    grid[i][j].tail = true;
-                    tail.arr.push(new __WEBPACK_IMPORTED_MODULE_1__Tail_js__["b" /* TailCell */](i, j));
-                    tail.manUpdate();
-                    master.field.initLineChecks(master);
-                }
-            }
-        }
-
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                if (this.x === grid[i][j].x && this.y === grid[i][j].y && grid[i][j].on === true && this.flying) {
-                    for (let k = 0; k < tail.arr.length; k++) {
-                        grid[tail.arr[k].x][tail.arr[k].y].mesh.mesh.visible = true;
-                        grid[tail.arr[k].x][tail.arr[k].y].on = true;
-                    }
-
-                    field.checkFlood(tail, master.enemies);
-                    tail.arr = [];
-                    tail.waveInitArr = [];
-                    tail.hideTail();
-                    field.emptyRoute();
-                    field.initLineChecks(master);
-                    this.flying = false;
-
-                    this.direction = '';
-                }
-            }
-        }
-
-        for (let i = 0; i < tail.arr.length - 1; i++) {
-            if (tail.arr[i].x === (this.x - w / 2) / w && tail.arr[i].y === (this.y - w / 2) / w) {
-                die();
-            }
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Pac;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__InnerMonster__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Math__ = __webpack_require__(1);
-
-
-
-
-class Bouncer extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
-    constructor() {
-        super();
-
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](80, 80, -2);
-        this.type = 'bouncer';
-        this.d = 16;
-        this.r = 10;
-        this.mass = 10;
-        this.angleArr = [-90, -180];
-        this.angleArr = [0, -180];
-        // this.angle = (180 - 45) * Math.random(1) * (Math.PI / 180);
-        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
-        this.angle = 270 * (Math.PI / 180);
-
-        this.origSpeed = 2;
-        this.speed = this.origSpeed;
-        this.speedTemp = this.speed;
-        this.angleTemp = this.angle;
-
-        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0x22ff00 });
-        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
-        this.ID = this.mesh.uuid;
-        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
-    }
-
-    setPosition(x, y = 0, z) {
-        this.mesh.position.set(x, y, z);
-    }
-
-    update(master) {
-        this.collideWithTail(master);
-        this.collideWithBorder(master.field.consolidatedLines);
-        // if (gameActive) {
-        this.walk();
-        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
-        this.collideWithPacman(master);
-    }
-
-    collideWithBorder(lines) {
-        let collidingLines = this.lineCollideCheck(lines);
-        let collidingLineEnd = this.lineEndCollideCheck(lines);
-        this.type = 'eater';
-
-        if (collidingLines.length > 0) {
-            collidingLines.forEach(line => {
-                this.bounce(line);
-            });
-            return;
-        } else if (collidingLineEnd) {
-            this.endPointBounce(collidingLineEnd);
-        } else {
-            //DO NOTHING
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Bouncer;
-
-
-class Eater extends __WEBPACK_IMPORTED_MODULE_1__InnerMonster__["a" /* default */] {
-    constructor() {
-        super();
-
-        this.location = new __WEBPACK_IMPORTED_MODULE_2__Math__["a" /* Vec3 */](80, 150, -2);
-        this.type = 'eater';
-
-        this.d = 16;
-        this.r = 10;
-        this.mass = 10;
-        this.angleArr = [-90, -180];
-        this.angleArr = [0, -180];
-        // this.angle = 270 *Math.random(1)* (Math.PI / 180);
-        this.angle = 271 + 180 * (Math.PI / 180);
-
-        this.origSpeed = 1.5;
-        this.speed = this.origSpeed;
-        this.speedTemp = this.speed;
-        this.angleTemp = this.angle;
-
-        this.geometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](8, 32, 32);
-        this.material = new __WEBPACK_IMPORTED_MODULE_0_three__["MeshBasicMaterial"]({ color: 0xff0000 });
-        this.mesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](this.geometry, this.material);
-        this.ID = this.mesh.uuid;
-
-        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
-    }
-
-    setPosition(x, y = 0, z) {
-        this.mesh.position.set(x, y, z);
-    }
-
-    update(master) {
-        this.collideWithTail(master);
-        this.collideWithBorder(master.field.consolidatedLines, master);
-        // if (gameActive) {
-        this.walk();
-        this.setPosition(this.location.x - 10, this.location.y - 10, this.location.z);
-        this.collideWithPacman(master);
-    }
-
-    collideWithBorder(lines, master) {
-        let collidingLines = this.lineCollideCheck(lines);
-        let collidingLineEnd = this.lineEndCollideCheck(lines);
-        if (collidingLines.length > 0) {
-            collidingLines.forEach(line => {
-                this.bounce(line);
-                this.eatCell(master);
-            });
-            return;
-        } else if (collidingLineEnd) {
-            this.endPointBounce(collidingLineEnd);
-            this.eatCell(master);
-        } else {
-            //DO NOTHING
-        }
-    }
-
-    eatCell(master) {
-        let grid = master.field.grid;
-
-        let pacman = master.pacman[0];
-        let field = master.field;
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                if (this.squareCollide(i, j, grid) && grid[i][j].onPermanent === false && grid[i][j].on) {
-                    grid[i][j].on = false;
-                    grid[i][j].mesh.mesh.visible = false;
-                    grid[i][j].activeLines = [];
-                    field.initLineChecks(master);
-                    if (grid[i][j].x2 === pacman.mesh.position.x && grid[i][j].y2 === pacman.mesh.position.y) {
-                        pacman.direction = pacman.lastDirection;
-                        pacman.flying = true;
-                    }
-                }
-            }
-        }
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["b"] = Eater;
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Math_js__ = __webpack_require__(1);
-
-
-let w = 20;
-
-class InnerMonster {
-
-    walk() {
-        this.location.y -= Math.sin(this.angle) * this.speed;
-        this.location.x += Math.cos(this.angle) * this.speed;
-        this.speed = this.origSpeed;
-        this.collMonster = false;
-    }
-
-    collideWithTail(master) {
-        let tail = master.tail;
-        if (tail.arr.length > 0) {
-            for (let i = 0; i < tail.grid.length; i++) {
-                for (let j = 0; j < tail.grid[i].length; j++) {
-                    if (tail.grid[i][j].mesh.mesh.visible === true && this.squareCollide(i, j, tail.grid)) {
-                        // tail.waveInit(i,j)
-                        master.die();
-                    }
-                }
-            }
-        }
-    }
-
-    collideWithPacman(master) {
-        let pacman = master.pacman[0];
-        if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(pacman.aniX, pacman.aniY, this.location.x, this.location.y) < pacman.r + this.r && pacman.flying) {
-            master.die();
-        }
-    }
-
-    setPostCollSpeedAngle() {
-        if (this.collMonster === true) {
-            this.speed = this.speedTemp;
-            this.angle = this.angleTemp;
-            this.collMonster = false;
-        }
-    }
-
-    collideWithMonster(monsters) {
-        for (let i = 0; i < monsters.length; i++) {
-            let monster = monsters[i];
-            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, monster.location.x, monster.location.y) < this.r - 1.5 + monster.r - 1.5 && monster.ID !== this.ID) {
-                let second = monster;
-                let thisSpeedX = Math.cos(this.angle) * this.speed;
-                let thisSpeedY = Math.sin(this.angle) * this.speed;
-                let secondSpeedX = Math.cos(second.angle) * second.speed;
-                let secondSpeedY = Math.sin(second.angle) * second.speed;
-
-                let collisionPointX = (this.x * second.r + second.x * this.r) / (this.r + second.r);
-                let collisionPointY = (this.y * second.r + second.y * this.r) / (this.r + second.r);
-
-                let thisNewX = (thisSpeedX * (this.mass - second.mass) + 2 * second.mass * secondSpeedX) / (this.mass + second.mass);
-                let thisNewY = (thisSpeedY * (this.mass - second.mass) + 2 * second.mass * secondSpeedY) / (this.mass + second.mass);
-                let secondNewX = (secondSpeedX * (second.mass - this.mass) + 2 * this.mass * thisSpeedX) / (this.mass + second.mass);
-                let secondNewY = (secondSpeedY * (second.mass - this.mass) + 2 * this.mass * thisSpeedY) / (this.mass + second.mass);
-
-                this.collMonster = true;
-                this.angleTemp = Math.atan2(thisNewY, thisNewX);
-                this.speedTemp = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(0, 0, thisNewX, thisNewY);
-
-                return;
-            }
-        }
-    }
-
-    bounce(line) {
-        let lineSlope = (line.y2 - line.y1) / (line.x2 - line.x1);
-        let linePerpSlope = -1 / lineSlope;
-
-        let thisAngleDeg = this.angle * (180 / Math.PI);
-        let linePerpRad = Math.atan(linePerpSlope, 1);
-
-        let linePerpDeg = linePerpRad * (180 / Math.PI) * -1 + 180;
-        let newAngleDiff = (thisAngleDeg - linePerpDeg) * 2;
-        let newAngle = thisAngleDeg - newAngleDiff + 180;
-        let newAngleRad = newAngle * (Math.PI / 180);
-        this.angle = newAngleRad;
-        this.speed = this.speed;
-    }
-
-    endPointBounce(point) {
-        let p = point;
-        let pc = { x: p.x, y: p.y, r: this.r };
-        let dot = { x: this.location.x, y: this.location.y, angle: this.angle * (180 / Math.PI) };
-
-        let diffY = dot.y - pc.y;
-        let diffX = dot.x - pc.x;
-
-        let angleOfColl = Math.atan2(diffY, diffX) * -1 * (180 / Math.PI);
-
-        let diffAngle = (dot.angle - 180 - angleOfColl) * 2;
-        let newAngleinRad = (dot.angle - 180 - diffAngle) * (Math.PI / 180);
-
-        this.angle = newAngleinRad;
-        this.speed = this.speed;
-    }
-
-    squareCollide(i, j, grid) {
-
-        let distX = Math.abs(this.location.x - grid[i][j].x - w / 2);
-        let distY = Math.abs(this.location.y - grid[i][j].y - w / 2);
-
-        if (distX > w / 2 + this.r) {
-            return false;
-        }
-        if (distY > w / 2 + this.r) {
-            return false;
-        }
-
-        if (distX <= w / 2) {
-            return true;
-        }
-        if (distY <= w / 2) {
-            return true;
-        }
-
-        let dx = distX - w / 2;
-        let dy = distY - w / 2;
-
-        return dx * dx + dy * dy <= this.r * this.r;
-    }
-
-    lineEndCollideCheck(lines) {
-
-        let point;
-        let endPointCollides;
-
-        for (let i = 0; i < lines.length; i++) {
-            let l = lines[i];
-
-            if (Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x1, l.y1, this.location.x, this.location.y) < Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(l.x2, l.y2, this.location.x, this.location.y)) {
-                point = { x: l.x1, y: l.y1 };
-            } else {
-                point = { x: l.x2, y: l.y2 };
-            }
-
-            endPointCollides = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, point.x, point.y) < this.r;
-
-            if (endPointCollides) {
-                return point;
-            } else {
-                //DO NOTHING
-            }
-        }
-    }
-
-    lineCollideCheck(lines) {
-        let lineSlope;
-        let objSlope;
-        let lineOff;
-        let objOff;
-        let newX;
-        let newY;
-        let v;
-        let m;
-        let m2;
-        let dotProduct1;
-        let dotProduct2;
-        let withinBoundries;
-        let isOnInfLine;
-        let linesToReturn = [];
-
-        for (let i = 0; i < lines.length; i++) {
-            let l = lines[i];
-
-            if (l.x1 === l.x2) {
-                lineSlope = 0;
-            } else {
-                lineSlope = (l.y2 - l.y1) / (l.x2 - l.x1);
-            }
-
-            if (lineSlope === 0) {
-                objSlope = 0;
-            } else {
-                objSlope = -1 / lineSlope;
-            }
-
-            lineOff = l.y1 - l.x1 * lineSlope;
-            objOff = this.location.y - this.location.x * objSlope;
-
-            if (l.x1 == l.x2) {
-                newX = l.x1;
-                newY = this.location.y;
-            } else if (l.y1 == l.y2) {
-                newY = l.y1;
-                newX = this.location.x;
-            } else {
-                newX = (objOff - lineOff) / (lineSlope - objSlope);
-                newY = newX * objSlope + objOff;
-            }
-
-            v = { x: l.x2 - l.x1, y: l.y2 - l.y1 };
-            m = { x: this.location.x - l.x1, y: this.location.y - l.y1 };
-            m2 = { x: this.location.x - l.x2, y: this.location.y - l.y2 };
-
-            dotProduct1 = v.x * m.x + v.y * m.y;
-            dotProduct2 = v.x * m2.x + v.y * m2.y;
-
-            withinBoundries = dotProduct1 > 0 && dotProduct2 < 0;
-
-            isOnInfLine = Object(__WEBPACK_IMPORTED_MODULE_0__Math_js__["b" /* dist */])(this.location.x, this.location.y, newX, newY) < this.r;
-
-            if (isOnInfLine && withinBoundries) {
-                linesToReturn.push(l);
-            } else {
-                //DO NOTHING
-            }
-        }
-        return linesToReturn;
-    }
-
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = InnerMonster;
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Cell_js__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_three__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Structures_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Math_js__ = __webpack_require__(1);
-
-
-
-
-
-let w = 20;
-let cols = 20;
-let rows = 20;
-
-class Field {
-    constructor(master) {
-        this.grid = Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["c" /* new2DArray */])(20, 20);
-        this.grid = this.loadBoxes(this.grid);
-
-        this.getFlood = [];
-        this.floodArr = [];
-
-        this.lines = [];
-        this.consolidatedLines = [];
-        this.initLineChecks(master);
-    }
-
-    loadBoxes(grid) {
-
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                let size = 20;
-                let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](size, size, size);
-                let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0x0000ff });
-
-                let entity = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
-                entity.setPosition(i * size, j * size, 0);
-
-                grid[i][j] = new __WEBPACK_IMPORTED_MODULE_0__Cell_js__["a" /* Cell */](i, j);
-
-                if (i === 0 || j === 0 || i === grid.length - 1 || j === grid[i].length - 1) {
-                    entity.mesh.visible = true;
-                    grid[i][j].on = true;
-                    grid[i][j].onPermanent = true;
-                } else {
-                    entity.mesh.visible = false;
-                }
-                grid[i][j].mesh = entity;
-            }
-        }
-
-        return grid;
-    }
-
-    // Floodfill methods
-
-
-    floodFill(cell) {
-        let grid = this.grid;
-        if (cell.on === false && cell.hasFlooded === false) {
-            cell.hasFlooded = true;
-            this.floodArr.push(cell.i);
-
-            this.floodFill(grid[cell.i[0]][cell.i[1] + 1]);
-            this.floodFill(grid[cell.i[0]][cell.i[1] - 1]);
-            this.floodFill(grid[cell.i[0] + 1][cell.i[1]]);
-            this.floodFill(grid[cell.i[0] - 1][cell.i[1]]);
-
-            return this.floodArr;
-        }
-    }
-
-    floodReset() {
-        this.floodArr = [];
-        for (let i = 0; i < this.grid.length; i++) {
-            for (let j = 0; j < this.grid[i].length; j++) {
-                this.grid[i][j].hasFlooded = false;
-            }
-        }
-    }
-
-    checkFloodDir(dir) {
-
-        if (!dir.on && !dir.hasFlooded && !dir.tail) {
-            let buffer = this.floodFill(this.grid[dir.i[0]][dir.i[1]]);
-            this.getFlood.push(buffer);
-            this.floodArr = [];
-        }
-    }
-
-    checkArrForMonster(floodAreas, enemies) {
-        let currentX;
-        let currentY;
-        let currentCell;
-        let area;
-        let foundMoster;
-
-        for (let i = 0; i < floodAreas.length; i++) {
-            area = floodAreas[i];
-            foundMoster = false;
-
-            for (let ii = 0; ii < area.length; ii++) {
-                currentX = area[ii][0];
-                currentY = area[ii][1];
-                currentCell = this.grid[currentX][currentY];
-
-                for (let iii = 0; iii < enemies.length; iii++) {
-                    if (Object(__WEBPACK_IMPORTED_MODULE_3__Math_js__["b" /* dist */])(currentCell.x, currentCell.y, enemies[iii].location.x, enemies[iii].location.y) < w) {
-                        foundMoster = true;
-                    }
-                }
-            }
-            if (foundMoster) {
-                //DO NOTHING
-            } else {
-                for (let ii = 0; ii < area.length; ii++) {
-                    currentX = area[ii][0];
-                    currentY = area[ii][1];
-                    currentCell = this.grid[currentX][currentY];
-                    currentCell.on = true;
-                    currentCell.mesh.mesh.visible = true;
-                }
-            }
-        }
-    }
-
-    checkFlood(tail, monsters) {
-        var grid = this.grid;
-
-        let x, y, potFloodUp, potFloodDown, potFloodLeft, potFloodRight;
-
-        for (let k = 0; k < tail.arr.length; k++) {
-            x = tail.arr[k].x;
-            y = tail.arr[k].y;
-            potFloodDown = grid[x][y + 1];
-            potFloodUp = grid[x][y - 1];
-            potFloodRight = grid[x - 1][y];
-            potFloodLeft = grid[x + 1][y];
-
-            this.checkFloodDir(potFloodDown);
-            this.checkFloodDir(potFloodUp);
-            this.checkFloodDir(potFloodRight);
-            this.checkFloodDir(potFloodLeft);
-        }
-
-        this.checkArrForMonster(this.getFlood, monsters);
-        this.floodReset();
-    }
-
-    emptyRoute() {
-        for (let i = 0; i < this.grid.length; i++) {
-            for (let j = 0; j < this.grid[i].length; j++) {
-                this.grid[i][j].tail = false;
-            }
-        }
-    }
-
-    // Line methods
-
-    initLineChecks(master) {
-
-        let grid = this.grid;
-
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                if (grid[i][j].on === true || grid[i][j].tail === true) {
-                    this.lineCheck(grid[i][j]);
-                }
-            }
-        }
-
-        let fieldMeshChildren = master.scene.children[0].children;
-        let fieldContainer = master.scene.children[0];
-
-        if (fieldMeshChildren.length > 0) {
-            this.emptyWalls(this.consolidatedLines, fieldMeshChildren, fieldContainer);
-        }
-
-        this.consolidatedLines = this.consolidateLines();
-
-        this.createWalls(this.consolidatedLines, master);
-    }
-
-    emptyWalls(lines, children, scene) {
-        for (var i = 0; i < lines.length; i++) {
-            for (var j = 0; j < children.length; j++) {
-                if (lines[i].ID === children[j].uuid) {
-                    scene.remove(children[j]);
-                }
-            }
-        }
-    }
-
-    createWalls(lines, master) {
-        lines.forEach(lineData => {
-            this.createWall(lineData, master);
-        });
-    }
-
-    createWall(data, master) {
-        function minimumThickness(wall) {
-            if (wall === 0) {
-                wall = 2;
-            } else {
-                return wall;
-            }
-            return wall;
-        }
-
-        let distX = Math.abs(data.x1 - data.x2 - 4);
-        let distY = Math.abs(data.y1 - data.y2 - 4);
-
-        distX = minimumThickness(distX);
-        distY = minimumThickness(distY);
-
-        let geometry = new __WEBPACK_IMPORTED_MODULE_1_three__["BoxGeometry"](distX, distY, 25);
-        let material = new __WEBPACK_IMPORTED_MODULE_1_three__["MeshBasicMaterial"]({ color: 0xff00ff });
-
-        let wall = new __WEBPACK_IMPORTED_MODULE_2__Structures_js__["a" /* Box */](geometry, material);
-        // if (data.pos === 'bottom' || data.pos === 'top'){
-        //     wall.setPosition(data.x1 + 180-10, data.y1-10, 0)
-        // }
-
-        // if (data.pos === 'left' || data.pos === 'right'){
-        //     wall.setPosition(data.x1 -10, data.y1+ 180-10, 0)
-        // }
-        wall.setPosition(data.x1 + distX / 2 - 11, data.y1 + distY / 2 - 11, 0);
-
-        data.ID = wall.ID;
-        master.addEntity(wall);
-    }
-
-    lineCheck(cell) {
-
-        cell.activeLines = [];
-
-        let grid = this.grid;
-        let thisX = cell.i[0];
-        let thisY = cell.i[1];
-
-        let above = thisY - 1;
-        let below = thisY + 1;
-        let left = thisX - 1;
-        let right = thisX + 1;
-
-        if (above >= 0 && grid[thisX][above].on === false && grid[thisX][above].tail === false) {
-            cell.activeLines.push(cell.lines[0]);
-        }
-        if (left >= 0 && grid[left][thisY].on === false && grid[left][thisY].tail === false) {
-            cell.activeLines.push(cell.lines[3]);
-        }
-        if (below < cols && grid[thisX][below].on === false && grid[thisX][below].tail === false) {
-            cell.activeLines.push(cell.lines[2]);
-        }
-        if (right < rows && grid[right][thisY].on === false && grid[right][thisY].tail === false) {
-            cell.activeLines.push(cell.lines[1]);
-        }
-    }
-
-    consolidateLines() {
-
-        let grid = this.grid;
-        let linesY = [];
-        let linesX = [];
-        let allLines = [];
-        let consolidatedLines = [];
-
-        let y;
-        let x;
-        let smallestX;
-        let smallestY;
-        let lastItem;
-        let largestX;
-        let largestY;
-        let newLine;
-        let mult;
-
-        for (let j = 0; j < cols; j++) {
-            for (let i = 0; i < rows; i++) {
-                if (grid[i][j].activeLines.length > 0) {
-
-                    grid[i][j].activeLines.forEach(data => {
-                        allLines.push(data);
-                    });
-                }
-            }
-        }
-        for (let i = 0; i < allLines.length; i++) {
-            allLines[i].checked = false;
-        }
-
-        for (let i = 0; i < allLines.length; i++) {
-            let l1 = allLines[i];
-            if (l1.y1 === l1.y2) {
-                mult = 1;
-                for (let j = 0; j < allLines.length; j++) {
-                    let l2 = allLines[j];
-                    if (l1.y1 === l2.y1 && l1.y2 === l2.y2 && l2.checked === false && i !== j && l1.x1 === l2.x1 - w * mult) {
-                        linesY.push(l2);
-                        allLines[j].checked = true;
-                        mult++;
-                    }
-                }
-
-                if (linesY.length > 0) {
-                    y = l1.y1;
-                    smallestX = l1.x1;
-                    lastItem = linesY.length - 1;
-                    largestX = linesY[lastItem].x2;
-                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
-
-                    consolidatedLines.push(newLine);
-
-                    allLines[i].checked = true;
-                    linesY = [];
-                } else if (linesY.length === 0 && allLines[i].checked === false) {
-                    y = l1.y1;
-                    smallestX = l1.x1;
-                    largestX = l1.x2;
-                    newLine = { pos: l1.pos, x1: smallestX, y1: y, x2: largestX, y2: y };
-
-                    consolidatedLines.push(newLine);
-                }
-            }
-
-            if (l1.x1 === l1.x2) {
-                mult = 1;
-                for (let j = 0; j < allLines.length; j++) {
-                    let l2 = allLines[j];
-                    if (l1.x1 === l2.x1 && l1.x2 === l2.x2 && l2.checked === false && i !== j && l1.y1 === l2.y1 - w * mult) {
-                        linesX.push(l2);
-                        allLines[j].checked = true;
-                        mult++;
-                    }
-                }
-
-                if (linesX.length > 0) {
-                    x = l1.x1;
-                    smallestY = l1.y1;
-                    lastItem = linesX.length - 1;
-                    largestY = linesX[lastItem].y2;
-                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
-
-                    consolidatedLines.push(newLine);
-
-                    allLines[i].checked = true;
-                    linesX = [];
-                } else if (linesX.length === 0 && allLines[i].checked === false) {
-                    x = l1.x1;
-                    smallestY = l1.y1;
-                    largestY = l1.y2;
-                    newLine = { pos: l1.pos, x1: x, y1: smallestY, x2: x, y2: largestY };
-
-                    consolidatedLines.push(newLine);
-                }
-            }
-
-            allLines[i].checked = true;
-        }
-        return consolidatedLines;
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Field;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-class KeyboardState {
-    constructor() {
-        // Holds the current state of a given key
-        this.keyStates = new Map();
-
-        // Holds the callback functions for a key code
-        this.keyMap = new Map();
-    }
-
-}
-/* unused harmony export KeyboardState */
-
-
-function keyPressed() {}
-
-function keyReleased() {}
 
 /***/ })
 /******/ ]);

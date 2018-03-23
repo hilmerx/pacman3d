@@ -68,7 +68,7 @@ export class Field{
 
 
     floodReset() {
-        this.floodArr =[];
+        this.getFlood =[]
         for (let i = 0; i<this.grid.length; i++){
             for (let j = 0; j<this.grid[i].length; j++){
                 this.grid[i][j].hasFlooded = false
@@ -91,10 +91,9 @@ export class Field{
         let currentCell
         let area
         let foundMoster
-
         for (let i = 0; i<floodAreas.length; i++){
             area = floodAreas[i]
-            foundMoster= false
+            foundMoster = false
 
             for (let ii = 0; ii<area.length; ii++){
                 currentX = area[ii][0]
@@ -102,7 +101,7 @@ export class Field{
                 currentCell = this.grid[currentX][currentY]
 
                 for (let iii = 0; iii<enemies.length; iii++){
-                    if (dist(currentCell.x,currentCell.y, enemies[iii].location.x, enemies[iii].location.y) < w){
+                    if (dist(currentCell.x,currentCell.y, enemies[iii].position.x, enemies[iii].position.y) < w){
                         foundMoster = true
                     }
                 }

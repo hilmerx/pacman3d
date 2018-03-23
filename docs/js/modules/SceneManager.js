@@ -17,6 +17,8 @@ export default class SceneManager {
         this.tail
         this.enemies = []
         this.pacman = []
+        this.walls = []
+        this.score = 0
 
         this.boardContainer = new THREE.Object3D()
         this.boardContainer.position.set(-200,-200,0)
@@ -26,7 +28,6 @@ export default class SceneManager {
         this.renderer.setPixelRatio(window.devicePixelRatio)
         this.renderer.setSize(window.innerWidth, window.innerHeight-5)
 
-        this.update()
     }
 
     updateEntities(){
@@ -36,18 +37,25 @@ export default class SceneManager {
     }
 
     addLight(newLight){
-
         let light = newLight.type
         light.position.set(...newLight.pos)
         this.scene.add(light)
     }
 
-    addGrid(grid){
+    addGrid(grid, name){
+        let buffer = {
+            [name]: new THREE.Object3D(),
+        }
+        buffer[name].name = name
+
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
-                this.addEntity(grid[i][j].mesh)
+                buffer[name].add(grid[i][j].mesh.mesh)
             }
         }
+
+
+        this.boardContainer.add(buffer[name])
     }
 
     addEntity(entity){
@@ -62,6 +70,10 @@ export default class SceneManager {
             this.pacman.push(entity)
         }
 
+        if (entity.type === 'wall') {
+            this.walls.push(entity)
+        }
+
         this.entities.push(entity)
     }
 
@@ -72,7 +84,9 @@ export default class SceneManager {
     update(){
         // this.controls.update()
         this.updateEntities()
-        this.renderer.render(this.scene, this.camera)
+
+        this.tail.update(this)
+
         let enemies = this.enemies
         let currentEnemy
         for (let i = 0; i<enemies.length; i++){
@@ -85,6 +99,8 @@ export default class SceneManager {
             currentEnemy.setPostCollSpeedAngle(enemies)
         }
 
+        this.showScore()
+        this.renderer.render(this.scene, this.camera)
     }
 
     die(){
@@ -105,6 +121,8 @@ export default class SceneManager {
         for (let i = 0; i<grid.length; i++){
             for (let j = 0; j<grid[i].length; j++){
                 this.tail.grid[i][j].mesh.mesh.visible = false
+                this.tail.grid[i][j].mesh.mesh.material.opacity = 0.2
+                this.tail.grid[i][j].mesh.mesh.material.color.setHex(0xff99ff)
                 grid[i][j].activeLines = []
 
                 if (i === 0 || j === 0 || i === grid.length-1 || j === grid[i].length-1) {
@@ -117,8 +135,35 @@ export default class SceneManager {
                 }
             }
         }
+    }
 
+    countScore() {
+        let score = 0
+        let avaliable = 0
+        let scoreSpan
 
+        for (var i = 0; i < this.field.grid.length; i++) {
+            for (var j = 0; j < this.field.grid[i].length; j++) {
+                let current = this.field.grid[i][j]
+                if (current.on && !current.onPermanent) {
+                    score++
+                }
+                if (!current.onPermanent) {
+                    avaliable++
+                }
+            }
+        }
+        this.score = Math.floor(((score / avaliable)*100)/80*100)
+        if (this.score > 100) {
+            this.score = 100
+        } 
+
+        scoreSpan = document.getElementById('score')
+        scoreSpan.textContent = this.score
+
+    }
+
+    showScore(){
     }
 }
 
